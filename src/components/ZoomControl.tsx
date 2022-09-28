@@ -1,6 +1,7 @@
-import { FC, LegacyRef } from 'react'
+import { FC } from 'react'
 
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL } from '../constant'
+import { ToolbarProps } from './Toolbar'
 
 export const ZoomControl: FC<Props> = ({
   zoomLabel,
@@ -36,10 +37,10 @@ export const ZoomControl: FC<Props> = ({
 }
 
 interface Props {
-  zoomLabel?: string
-  handleZoomButtonClick?: () => void
-  isAnimating: () => boolean
-  zoomButton: LegacyRef<HTMLButtonElement> | undefined
-  zoomLevel: number
+  zoomLabel?: ToolbarProps['zoomLabel']
+  handleZoomButtonClick: ToolbarProps['handleZoomButtonClick']
+  isAnimating: ToolbarProps['isAnimating']
+  zoomButton: ToolbarProps['zoomButton']
+  zoomLevel: ToolbarProps['zoomLevel']
   type: 'out' | 'in'
 }

@@ -1272,8 +1272,7 @@ class ReactImageLightbox extends Component<Props, State> {
       onAfterOpen,
       imageCrossOrigin,
       reactModalProps,
-      loader,
-      isOpen
+      loader
     } = this.props
     const { zoomLevel, offsetX, offsetY, isClosing, loadErrorStatus } = this.state
 
@@ -1436,7 +1435,7 @@ class ReactImageLightbox extends Component<Props, State> {
 
     return (
       <Modal
-        isOpen={isOpen}
+        isOpen
         onRequestClose={clickOutsideToClose ? this.requestClose : undefined}
         onAfterOpen={() => {
           // Focus on the div with key handlers

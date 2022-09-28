@@ -19,7 +19,7 @@ import {
   SOURCE_POINTER,
   MIN_SWIPE_DISTANCE
 } from './constant'
-import { ZoomControl } from './components'
+import { Caption, NavButton, Toolbar } from './components'
 import './style.css'
 
 type OwnProps = {
@@ -1290,9 +1290,8 @@ class ReactImageLightbox extends Component<Props, State> {
     }
 
     // Key endings to differentiate between images with the same src
-    const keyEndings = {}
+    const keyEndings: Record<string, string> = {}
     this.getSrcTypes().forEach(({ name, keyEnding }) => {
-      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       keyEndings[name] = keyEnding
     })
 
@@ -1326,7 +1325,6 @@ class ReactImageLightbox extends Component<Props, State> {
           <div
             className={`${imageClass} ril__image ril-errored`}
             style={imageStyle}
-            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             key={this.props[srcType] + keyEndings[srcType]}
           >
             <div className='ril__errorContainer'>{this.props.imageLoadErrorMessage}</div>
@@ -1356,7 +1354,6 @@ class ReactImageLightbox extends Component<Props, State> {
           <div
             className={`${imageClass} ril__image ril-not-loaded`}
             style={imageStyle}
-            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             key={this.props[srcType] + keyEndings[srcType]}
           >
             <div className='ril__loadingContainer'>{loadingIcon}</div>
@@ -1375,7 +1372,6 @@ class ReactImageLightbox extends Component<Props, State> {
             onDoubleClick={this.handleImageDoubleClick}
             onWheel={this.handleImageMouseWheel}
             style={imageStyle}
-            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             key={imageSrc + keyEndings[srcType]}
           >
             <div className='ril-download-blocker ril__downloadBlocker' />
@@ -1390,7 +1386,6 @@ class ReactImageLightbox extends Component<Props, State> {
             onWheel={this.handleImageMouseWheel}
             style={imageStyle}
             src={imageSrc}
-            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             key={imageSrc + keyEndings[srcType]}
             alt={typeof imageTitle === 'string' ? imageTitle : translate('Image')}
             draggable={false}
@@ -1435,9 +1430,12 @@ class ReactImageLightbox extends Component<Props, State> {
       }
     }
 
+    const isAnimating = () => this.isAnimating()
+    console.log({ isOpenProps: this.props.isOpen, isOpenBool: isOpen })
+
     return (
       <Modal
-        isOpen={isOpen}
+        isOpen
         onRequestClose={clickOutsideToClose ? this.requestClose : undefined}
         onAfterOpen={() => {
           // Focus on the div with key handlers
@@ -1480,91 +1478,45 @@ class ReactImageLightbox extends Component<Props, State> {
           >
             {images}
           </div>
-
-          {prevSrc && (
-            <button // Move to previous image button
-              type='button'
-              className='ril-prev-button ril__navButtons ril__navButtonPrev'
-              key='prev'
-              aria-label={this.props.prevLabel}
-              title={this.props.prevLabel}
-              onClick={!this.isAnimating() ? this.requestMovePrev : undefined} // Ignore clicks during animation
+          {prevSrc ? (
+            <NavButton
+              isAnimating={isAnimating}
+              direction='Prev'
+              label={this.props.prevLabel}
+              requestMove={this.requestMovePrev}
             />
-          )}
-
-          {nextSrc && (
-            <button // Move to next image button
-              type='button'
-              className='ril-next-button ril__navButtons ril__navButtonNext'
-              key='next'
-              aria-label={this.props.nextLabel}
-              title={this.props.nextLabel}
-              onClick={!this.isAnimating() ? this.requestMoveNext : undefined} // Ignore clicks during animation
+          ) : null}
+          {nextSrc ? (
+            <NavButton
+              isAnimating={isAnimating}
+              direction='Next'
+              label={this.props.nextLabel}
+              requestMove={this.requestMoveNext}
             />
-          )}
+          ) : null}
 
-          <div // Lightbox toolbar
-            className='ril-toolbar ril__toolbar'
-          >
-            <ul className='ril-toolbar-left ril__toolbarSide ril__toolbarLeftSide'>
-              <li className='ril-toolbar__item ril__toolbarItem'>
-                <span className='ril-toolbar__item__child ril__toolbarItemChild'>{imageTitle}</span>
-              </li>
-            </ul>
+          <Toolbar
+            zoomInButton={this.zoomInBtn}
+            zoomLevel={zoomLevel}
+            zoomInLabel={this.props.zoomInLabel}
+            isAnimating={isAnimating}
+            handleZoomInButtonClick={this.handleZoomInButtonClick}
+            zoomOutButton={this.zoomOutBtn}
+            zoomOutLabel={this.props.zoomOutLabel}
+            handleZoomOutButtonClick={this.handleZoomOutButtonClick}
+            closeLabel={this.props.closeLabel}
+            requestClose={this.requestClose}
+            enableZoom={enableZoom}
+            toolbarButtons={toolbarButtons}
+          />
 
-            <ul className='ril-toolbar-right ril__toolbarSide ril__toolbarRightSide'>
-              {toolbarButtons &&
-                toolbarButtons.map((button: any, i: any) => (
-                  <li key={`button_${i + 1}`} className='ril-toolbar__item ril__toolbarItem'>
-                    {button}
-                  </li>
-                ))}
-
-              {enableZoom ? (
-                <>
-                  <ZoomControl
-                    zoomButton={this.zoomInBtn}
-                    zoomLevel={zoomLevel}
-                    zoomLabel={this.props.zoomInLabel}
-                    isAnimating={() => this.isAnimating()}
-                    handleZoomButtonClick={this.handleZoomInButtonClick}
-                    type='in'
-                  />
-                  <ZoomControl
-                    zoomButton={this.zoomOutBtn}
-                    zoomLevel={zoomLevel}
-                    zoomLabel={this.props.zoomOutLabel}
-                    isAnimating={() => this.isAnimating()}
-                    handleZoomButtonClick={this.handleZoomOutButtonClick}
-                    type='out'
-                  />
-                </>
-              ) : null}
-
-              <li className='ril-toolbar__item ril__toolbarItem'>
-                <button // Lightbox close button
-                  type='button'
-                  key='close'
-                  aria-label={this.props.closeLabel}
-                  title={this.props.closeLabel}
-                  className='ril-close ril-toolbar__item__child ril__toolbarItemChild ril__builtinButton ril__closeButton'
-                  onClick={!this.isAnimating() ? this.requestClose : undefined} // Ignore clicks during animation
-                />
-              </li>
-            </ul>
-          </div>
-
-          {this.props.imageCaption && (
-            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-            <div // Image caption
-              onWheel={this.handleCaptionMousewheel}
-              onMouseDown={event => event.stopPropagation()}
-              className='ril-caption ril__caption'
-              ref={this.caption}
-            >
-              <div className='ril-caption-content ril__captionContent'>{this.props.imageCaption}</div>
-            </div>
-          )}
+          {this.props.imageCaption ? (
+            <Caption
+              handleCaptionMousewheel={this.handleCaptionMousewheel}
+              captionRef={this.caption}
+              imageCaption={this.props.imageCaption}
+            />
+          ) : null}
         </div>
       </Modal>
     )

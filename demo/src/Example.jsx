@@ -115,7 +115,7 @@ class App extends Component {
   }
 
   render() {
-    const lightbox = (
+    const lightbox = this.state.isOpen ? (
       <Lightbox
         mainSrc={images[this.state.index]}
         nextSrc={images[(this.state.index + 1) % images.length]}
@@ -123,7 +123,6 @@ class App extends Component {
         // mainSrcThumbnail={thumbs[this.state.index]}
         // nextSrcThumbnail={thumbs[(this.state.index + 1) % images.length]}
         // prevSrcThumbnail={thumbs[(this.state.index + images.length - 1) % images.length]}
-        isOpen={this.state.isOpen}
         onCloseRequest={this.closeLightbox}
         onMovePrevRequest={this.movePrev}
         onMoveNextRequest={this.moveNext}
@@ -131,7 +130,7 @@ class App extends Component {
         imageTitle={titles[this.state.index]}
         imageCaption={captions[this.state.index]}
       />
-    )
+    ) : null
 
     return (
       <div>
