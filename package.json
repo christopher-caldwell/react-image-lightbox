@@ -58,7 +58,7 @@
     "react-hook-form": "^7.21.0",
     "standard-version": "^9.3.2",
     "tscpaths": "^0.0.9",
-    "typescript": "4.4.4"
+    "typescript": "^4.8.4"
   },
   "keywords": [
     "react",
