@@ -1,22 +1,13 @@
-import React, { Component } from 'react'
-import Lightbox from '../../src'
-// import Lightbox from 'react-image-lightbox';
-// In your own app, you would need to use import styles once in the app
-// import 'react-image-lightbox/styles.css';
-import './stylesheets/vendor/stylesheet.css'
-import './stylesheets/vendor/github-light.css'
-import './stylesheets/app.css'
+import { Component } from 'react'
+import Lightbox from '@caldwell619/react-image-lightbox'
+import '@caldwell619/react-image-lightbox/dist/style.css'
+
 import image1 from './images/1.jpg'
 import image2 from './images/2.jpg'
 import image3 from './images/3.jpg'
 import image4 from './images/4.jpg'
-import image1Thumb from './images/1_thumb.jpg'
-import image2Thumb from './images/2_thumb.jpg'
-import image3Thumb from './images/3_thumb.jpg'
-import image4Thumb from './images/4_thumb.jpg'
 
 const images = [image1, image2, image3, image4]
-const thumbs = [image1Thumb, image2Thumb, image3Thumb, image4Thumb]
 
 const titles = [
   '',
@@ -124,25 +115,23 @@ class App extends Component {
   }
 
   render() {
-    let lightbox
-    if (this.state.isOpen) {
-      lightbox = (
-        <Lightbox
-          mainSrc={images[this.state.index]}
-          nextSrc={images[(this.state.index + 1) % images.length]}
-          prevSrc={images[(this.state.index + images.length - 1) % images.length]}
-          mainSrcThumbnail={thumbs[this.state.index]}
-          nextSrcThumbnail={thumbs[(this.state.index + 1) % images.length]}
-          prevSrcThumbnail={thumbs[(this.state.index + images.length - 1) % images.length]}
-          onCloseRequest={this.closeLightbox}
-          onMovePrevRequest={this.movePrev}
-          onMoveNextRequest={this.moveNext}
-          onImageLoadError={App.onImageLoadError}
-          imageTitle={titles[this.state.index]}
-          imageCaption={captions[this.state.index]}
-        />
-      )
-    }
+    const lightbox = (
+      <Lightbox
+        mainSrc={images[this.state.index]}
+        nextSrc={images[(this.state.index + 1) % images.length]}
+        prevSrc={images[(this.state.index + images.length - 1) % images.length]}
+        // mainSrcThumbnail={thumbs[this.state.index]}
+        // nextSrcThumbnail={thumbs[(this.state.index + 1) % images.length]}
+        // prevSrcThumbnail={thumbs[(this.state.index + images.length - 1) % images.length]}
+        isOpen={this.state.isOpen}
+        onCloseRequest={this.closeLightbox}
+        onMovePrevRequest={this.movePrev}
+        onMoveNextRequest={this.moveNext}
+        onImageLoadError={App.onImageLoadError}
+        imageTitle={titles[this.state.index]}
+        imageCaption={captions[this.state.index]}
+      />
+    )
 
     return (
       <div>

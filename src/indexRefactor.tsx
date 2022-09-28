@@ -19,6 +19,7 @@ import {
   SOURCE_POINTER,
   MIN_SWIPE_DISTANCE
 } from './constant'
+import { ZoomControl } from './components'
 import './style.css'
 
 type OwnProps = {
@@ -1519,51 +1520,26 @@ class ReactImageLightbox extends Component<Props, State> {
                   </li>
                 ))}
 
-              {enableZoom && (
-                <li className='ril-toolbar__item ril__toolbarItem'>
-                  <button // Lightbox zoom in button
-                    type='button'
-                    key='zoom-in'
-                    aria-label={this.props.zoomInLabel}
-                    title={this.props.zoomInLabel}
-                    className={[
-                      'ril-zoom-in',
-                      'ril__toolbarItemChild',
-                      'ril__builtinButton',
-                      'ril__zoomInButton',
-                      ...(zoomLevel === MAX_ZOOM_LEVEL ? ['ril__builtinButtonDisabled'] : [])
-                    ].join(' ')}
-                    ref={this.zoomInBtn}
-                    disabled={this.isAnimating() || zoomLevel === MAX_ZOOM_LEVEL}
-                    onClick={
-                      !this.isAnimating() && zoomLevel !== MAX_ZOOM_LEVEL ? this.handleZoomInButtonClick : undefined
-                    }
+              {enableZoom ? (
+                <>
+                  <ZoomControl
+                    zoomButton={this.zoomInBtn}
+                    zoomLevel={zoomLevel}
+                    zoomLabel={this.props.zoomInLabel}
+                    isAnimating={() => this.isAnimating()}
+                    handleZoomButtonClick={this.handleZoomInButtonClick}
+                    type='in'
                   />
-                </li>
-              )}
-
-              {enableZoom && (
-                <li className='ril-toolbar__item ril__toolbarItem'>
-                  <button // Lightbox zoom out button
-                    type='button'
-                    key='zoom-out'
-                    aria-label={this.props.zoomOutLabel}
-                    title={this.props.zoomOutLabel}
-                    className={[
-                      'ril-zoom-out',
-                      'ril__toolbarItemChild',
-                      'ril__builtinButton',
-                      'ril__zoomOutButton',
-                      ...(zoomLevel === MIN_ZOOM_LEVEL ? ['ril__builtinButtonDisabled'] : [])
-                    ].join(' ')}
-                    ref={this.zoomOutBtn}
-                    disabled={this.isAnimating() || zoomLevel === MIN_ZOOM_LEVEL}
-                    onClick={
-                      !this.isAnimating() && zoomLevel !== MIN_ZOOM_LEVEL ? this.handleZoomOutButtonClick : undefined
-                    }
+                  <ZoomControl
+                    zoomButton={this.zoomOutBtn}
+                    zoomLevel={zoomLevel}
+                    zoomLabel={this.props.zoomOutLabel}
+                    isAnimating={() => this.isAnimating()}
+                    handleZoomButtonClick={this.handleZoomOutButtonClick}
+                    type='out'
                   />
-                </li>
-              )}
+                </>
+              ) : null}
 
               <li className='ril-toolbar__item ril__toolbarItem'>
                 <button // Lightbox close button

@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
 import { Button } from '@mui/material'
-import Lightbox from '@caldwell619/react-image-lightbox'
+import { Lightbox } from '@caldwell619/react-image-lightbox/dist/index2'
 import '@caldwell619/react-image-lightbox/dist/style.css'
 
 import image1 from './images/1.jpg'
@@ -21,25 +21,16 @@ export const App: FC = () => {
   const prevSrc = prevIndex ? images[prevIndex] : undefined
   const nextSrc = nextIndex ? images[nextIndex] : undefined
 
-  const onPhotoNavigate = (direction: 'back' | 'forward') => {
-    setActiveIndex(currentIndex => (currentIndex + direction === 'back' ? -1 : 1))
-  }
+  // const onPhotoNavigate = (direction: 'back' | 'forward') => {
+  //   setActiveIndex(currentIndex => (currentIndex + direction === 'back' ? -1 : 1))
+  // }
 
   console.log({ fullUrl, prevSrc, nextSrc })
 
   return (
     <>
       <Button onClick={() => setActiveIndex(0)}>Open</Button>
-      {activeIndex !== null ? (
-        <Lightbox
-          mainSrc={fullUrl}
-          nextSrc={nextSrc}
-          prevSrc={prevSrc}
-          onCloseRequest={() => setActiveIndex(null)}
-          onMovePrevRequest={() => onPhotoNavigate('back')}
-          onMoveNextRequest={() => onPhotoNavigate('forward')}
-        />
-      ) : null}
+      <Lightbox isOpen={activeIndex !== null} srcSet={images} onClose={() => setActiveIndex(null)} />
     </>
   )
 }
