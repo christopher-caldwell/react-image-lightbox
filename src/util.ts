@@ -17,18 +17,15 @@ export function translate(str: any, replaceStrings = null) {
 }
 
 export function getWindowWidth() {
-  // @ts-expect-error TS(2304): Cannot find name 'global'.
   return typeof global.window !== 'undefined' ? global.window.innerWidth : 0
 }
 
 export function getWindowHeight() {
-  // @ts-expect-error TS(2304): Cannot find name 'global'.
   return typeof global.window !== 'undefined' ? global.window.innerHeight : 0
 }
 
 const isCrossOriginFrame = () => {
   try {
-    // @ts-expect-error TS(2304): Cannot find name 'global'.
     return global.window.location.hostname !== global.window.parent.location.hostname
   } catch (e) {
     return true
@@ -40,7 +37,6 @@ const isCrossOriginFrame = () => {
 // @ts-expect-error TS(7023): 'getHighestSafeWindowContext' implicitly has retur... Remove this comment to see the full error message
 export function getHighestSafeWindowContext(self = global.window.self) {
   // If we reached the top level, return self
-  // @ts-expect-error TS(2304): Cannot find name 'global'.
   if (self === global.window.top) {
     return self
   }
@@ -48,6 +44,7 @@ export function getHighestSafeWindowContext(self = global.window.self) {
   // If parent is the same origin, we can move up one context
   // Reference: https://stackoverflow.com/a/21965342/1601953
   if (!isCrossOriginFrame()) {
+    // @ts-expect-error
     return getHighestSafeWindowContext(self.parent)
   }
 

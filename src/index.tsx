@@ -1130,7 +1130,6 @@ class ReactImageLightbox extends Component<Props, State> {
       return
     }
 
-    // @ts-expect-error TS(2304): Cannot find name 'global'.
     const inMemoryImage = new global.Image()
 
     if (this.props.imageCrossOrigin) {
@@ -1447,7 +1446,6 @@ class ReactImageLightbox extends Component<Props, State> {
         }}
         style={modalStyle}
         contentLabel={translate('Lightbox')}
-        // @ts-expect-error TS(2304): Cannot find name 'global'.
         appElement={typeof global.window !== 'undefined' ? global.window.document.body : undefined}
         {...reactModalProps}
       >
