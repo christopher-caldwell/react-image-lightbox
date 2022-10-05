@@ -4,7 +4,6 @@ import React, {
   TouchEventHandler,
   TouchEvent,
   MouseEventHandler,
-  MouseEvent,
   WheelEventHandler,
   DOMAttributes
 } from 'react'
@@ -28,7 +27,16 @@ import {
   SOURCE_POINTER,
   MIN_SWIPE_DISTANCE
 } from './constant'
-import { Caption, NavButton, Toolbar } from './components'
+import {
+  DiscourageDownloadImage,
+  ErrorImage,
+  Caption,
+  NavButton,
+  Toolbar,
+  FallbackLoader,
+  FallbackImage,
+  Image
+} from './components'
 import './style.css'
 
 type OwnProps = {
@@ -1375,44 +1383,29 @@ class ReactImageLightbox extends Component<Props, State> {
       // when error on one of the loads then push custom error stuff
       if (bestImageInfo === null && hasTrueValue(loadErrorStatus)) {
         images.push(
-          <div
-            className={`${imageClass} ril__image ril-errored`}
-            style={imageStyle}
+          <ErrorImage
             //@ts-expect-error FIXME JS-y
             key={this.props[srcType] + keyEndings[srcType]}
-          >
-            <div className='ril__errorContainer'>{this.props.imageLoadErrorMessage}</div>
-          </div>
+            imageClass={imageClass}
+            imageStyle={imageStyle}
+            imageLoadErrorMessage={this.props.imageLoadErrorMessage}
+          />
         )
 
         return
       }
       if (bestImageInfo === null) {
-        const loadingIcon =
-          loader !== undefined ? (
-            loader
-          ) : (
-            <div className='ril-loading-circle ril__loadingCircle ril__loadingContainer__icon'>
-              {[...new Array(12)].map((_, index) => (
-                <div
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={index}
-                  className='ril-loading-circle-point ril__loadingCirclePoint'
-                />
-              ))}
-            </div>
-          )
+        const loadingIcon = loader !== undefined ? loader : <FallbackLoader />
 
         // Fall back to loading icon if the thumbnail has not been loaded
         images.push(
-          <div
-            className={`${imageClass} ril__image ril-not-loaded`}
-            style={imageStyle}
+          <FallbackImage
+            imageClass={imageClass}
+            imageStyle={imageStyle}
             //@ts-expect-error FIXME JS-y
             key={this.props[srcType] + keyEndings[srcType]}
-          >
-            <div className='ril__loadingContainer'>{loadingIcon}</div>
-          </div>
+            loadingIcon={loadingIcon}
+          />
         )
 
         return
@@ -1422,28 +1415,25 @@ class ReactImageLightbox extends Component<Props, State> {
       if (discourageDownloads) {
         imageStyle.backgroundImage = `url('${imageSrc}')`
         images.push(
-          <div
-            className={`${imageClass} ril__image ril__imageDiscourager`}
+          <DiscourageDownloadImage
+            imageClass={imageClass}
             onDoubleClick={this.handleImageDoubleClick}
             onWheel={this.handleImageMouseWheel}
-            style={imageStyle}
+            imageStyle={imageStyle}
             key={imageSrc + keyEndings[srcType]}
-          >
-            <div className='ril-download-blocker ril__downloadBlocker' />
-          </div>
+          />
         )
       } else {
         images.push(
-          <img
-            {...(imageCrossOrigin ? { crossOrigin: imageCrossOrigin } : {})}
-            className={`${imageClass} ril__image`}
-            onDoubleClick={this.handleImageDoubleClick}
-            onWheel={this.handleImageMouseWheel}
-            style={imageStyle}
-            src={imageSrc}
+          <Image
+            imageCrossOrigin={imageCrossOrigin}
             key={imageSrc + keyEndings[srcType]}
             alt={typeof imageTitle === 'string' ? imageTitle : translate('Image')}
-            draggable={false}
+            onDoubleClick={this.handleImageDoubleClick}
+            onWheel={this.handleImageMouseWheel}
+            imageStyle={imageStyle}
+            imageClass={imageClass}
+            imageSrc={imageSrc}
           />
         )
       }
