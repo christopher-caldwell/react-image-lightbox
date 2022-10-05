@@ -37,10 +37,10 @@ export const ZoomControl: FC<Props> = ({
 }
 
 interface Props {
-  zoomLabel?: ToolbarProps['zoomLabel']
-  handleZoomButtonClick: ToolbarProps['handleZoomButtonClick']
+  zoomLabel?: ToolbarProps['zoomInLabel']
+  handleZoomButtonClick: ToolbarProps['handleZoomInButtonClick']
   isAnimating: ToolbarProps['isAnimating']
-  zoomButton: ToolbarProps['zoomButton']
+  zoomButton: ToolbarProps['zoomInButton']
   zoomLevel: ToolbarProps['zoomLevel']
   type: 'out' | 'in'
 }
