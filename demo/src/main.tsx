@@ -4,7 +4,7 @@ import { CssBaseline } from '@mui/material'
 
 // import { App } from './App'
 // import App from './Example'
-import { App } from './Og'
+import { App } from './App'
 
 ReactDOM.render(
   <StrictMode>

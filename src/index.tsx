@@ -39,68 +39,67 @@ import {
 } from './components'
 import './style.css'
 
-type OwnProps = {
-  isOpen: boolean
-  mainSrc: string
-  prevSrc?: string
-  nextSrc?: string
-  mainSrcThumbnail?: string
-  prevSrcThumbnail?: string
-  nextSrcThumbnail?: string
-  onCloseRequest: ModalProps['onRequestClose']
-  onMovePrevRequest?: (event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement>) => void
-  onMoveNextRequest?: (event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement>) => void
-  onImageLoadError?: (...args: any[]) => any
-  onImageLoad?: (...args: any[]) => any
-  onAfterOpen?: (...args: any[]) => any
-  discourageDownloads?: boolean
-  animationDisabled?: boolean
-  animationOnKeyInput?: boolean
-  animationDuration?: number
-  keyRepeatLimit?: number
-  keyRepeatKeyupBonus?: number
-  imageTitle?: React.ReactNode
-  imageCaption?: React.ReactNode
-  imageCrossOrigin?: React.ImgHTMLAttributes<HTMLImageElement>['crossOrigin']
-  reactModalStyle?: Modal.Styles
-  imagePadding?: number
-  wrapperClassName?: string
-  toolbarButtons?: React.ReactNode[]
-  clickOutsideToClose?: boolean
-  enableZoom?: boolean
-  reactModalProps?: {}
-  nextLabel?: string
-  prevLabel?: string
-  zoomInLabel?: string
-  zoomOutLabel?: string
-  closeLabel?: string
-  imageLoadErrorMessage?: React.ReactNode
-  loader?: React.ReactNode
-}
-
-type State = {
-  isClosing: boolean
-  /** Component parts should animate (e.g., when images are moving, or image is being zoomed) */
-  shouldAnimate: boolean
-  /** Zoom level of image */
-  zoomLevel: number
-  /** Horizontal offset from center */
-  offsetX: number
-  /** Vertical offset from center */
-  offsetY: number
-  /** image load error for srcType */
-  loadErrorStatus: Record<string, boolean>
-}
+import { OwnProps, State } from './api/useLightbox'
 
 type Props = OwnProps
+
+const isTargetMatchImage = (target: TouchEvent<HTMLDivElement>['target']) => {
+  //@ts-expect-error FIXME
+  return target && /ril-image-current/.test(target.className)
+}
+
+const parseMouseEvent = (mouseEvent: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
+  return {
+    id: 'mouse',
+    source: SOURCE_MOUSE,
+    //@ts-expect-error FIXME Figure out why this being parsed
+    x: parseInt(mouseEvent.clientX, 10),
+    //@ts-expect-error FIXME Figure out why this being parsed
+    y: parseInt(mouseEvent.clientY, 10)
+  }
+}
+
+const parseTouchPointer = (touchPointer: TouchEvent<HTMLDivElement>) => {
+  return {
+    // @ts-expect-error FIXME idk
+    id: touchPointer.identifier,
+    source: SOURCE_TOUCH,
+    //@ts-expect-error FIXME Figure out why this being parse
+    x: parseInt(touchPointer.clientX, 10),
+    //@ts-expect-error FIXME Figure out why this being parse
+    y: parseInt(touchPointer.clientY, 10)
+  }
+}
+
+const parsePointerEvent = (pointerEvent: any) => {
+  return {
+    id: pointerEvent.pointerId,
+    source: SOURCE_POINTER,
+    x: parseInt(pointerEvent.clientX, 10),
+    y: parseInt(pointerEvent.clientY, 10)
+  }
+}
+
+const getTransform = ({ x = 0, y = 0, zoom = 1, width, targetWidth }: any) => {
+  let nextX = x
+  const windowWidth = getWindowWidth()
+  if (width > windowWidth) {
+    nextX += (windowWidth - width) / 2
+  }
+  const scaleFactor = zoom * (targetWidth / width)
+
+  return {
+    transform: `translate3d(${nextX}px,${y}px,0) scale3d(${scaleFactor},${scaleFactor},1)`
+  }
+}
 
 class ReactImageLightbox extends Component<Props, State> {
   static defaultProps: any
 
   caption: RefObject<HTMLDivElement>
-  currentAction: any
+  currentAction: number
   didUnmount: boolean
-  eventsSource: any
+  eventsSource: number
   imageCache: any
   keyCounter: any
   keyPressed: boolean
@@ -130,57 +129,6 @@ class ReactImageLightbox extends Component<Props, State> {
   windowContext: Window
   zoomInBtn: RefObject<HTMLButtonElement>
   zoomOutBtn: RefObject<HTMLButtonElement>
-
-  static isTargetMatchImage(target: TouchEvent<HTMLDivElement>['target']) {
-    //@ts-expect-error FIXME
-    return target && /ril-image-current/.test(target.className)
-  }
-
-  static parseMouseEvent(mouseEvent: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) {
-    return {
-      id: 'mouse',
-      source: SOURCE_MOUSE,
-      //@ts-expect-error FIXME Figure out why this being parsed
-      x: parseInt(mouseEvent.clientX, 10),
-      //@ts-expect-error FIXME Figure out why this being parsed
-      y: parseInt(mouseEvent.clientY, 10)
-    }
-  }
-
-  static parseTouchPointer(touchPointer: TouchEvent<HTMLDivElement>) {
-    return {
-      // @ts-expect-error FIXME idk
-      id: touchPointer.identifier,
-      source: SOURCE_TOUCH,
-      //@ts-expect-error FIXME Figure out why this being parse
-      x: parseInt(touchPointer.clientX, 10),
-      //@ts-expect-error FIXME Figure out why this being parse
-      y: parseInt(touchPointer.clientY, 10)
-    }
-  }
-
-  static parsePointerEvent(pointerEvent: any) {
-    return {
-      id: pointerEvent.pointerId,
-      source: SOURCE_POINTER,
-      x: parseInt(pointerEvent.clientX, 10),
-      y: parseInt(pointerEvent.clientY, 10)
-    }
-  }
-
-  // Request to transition to the previous image
-  static getTransform({ x = 0, y = 0, zoom = 1, width, targetWidth }: any) {
-    let nextX = x
-    const windowWidth = getWindowWidth()
-    if (width > windowWidth) {
-      nextX += (windowWidth - width) / 2
-    }
-    const scaleFactor = zoom * (targetWidth / width)
-
-    return {
-      transform: `translate3d(${nextX}px,${y}px,0) scale3d(${scaleFactor},${scaleFactor},1)`
-    }
-  }
 
   constructor(props: Props) {
     super(props)
@@ -816,21 +764,21 @@ class ReactImageLightbox extends Component<Props, State> {
   }
 
   handleMouseDown: MouseEventHandler<HTMLDivElement> = event => {
-    if (this.shouldHandleEvent(SOURCE_MOUSE) && ReactImageLightbox.isTargetMatchImage(event.target)) {
-      this.addPointer(ReactImageLightbox.parseMouseEvent(event))
+    if (this.shouldHandleEvent(SOURCE_MOUSE) && isTargetMatchImage(event.target)) {
+      this.addPointer(parseMouseEvent(event))
       this.multiPointerStart(event)
     }
   }
 
   handleMouseMove: MouseEventHandler<HTMLDivElement> = event => {
     if (this.shouldHandleEvent(SOURCE_MOUSE)) {
-      this.multiPointerMove(event, [ReactImageLightbox.parseMouseEvent(event)])
+      this.multiPointerMove(event, [parseMouseEvent(event)])
     }
   }
 
   handleMouseUp: MouseEventHandler<HTMLDivElement> = event => {
     if (this.shouldHandleEvent(SOURCE_MOUSE)) {
-      this.removePointer(ReactImageLightbox.parseMouseEvent(event))
+      this.removePointer(parseMouseEvent(event))
       this.multiPointerEnd(event)
     }
   }
@@ -839,17 +787,17 @@ class ReactImageLightbox extends Component<Props, State> {
     if (this.shouldHandleEvent(SOURCE_POINTER)) {
       switch (event.type) {
         case 'pointerdown':
-          if (ReactImageLightbox.isTargetMatchImage(event.target)) {
-            this.addPointer(ReactImageLightbox.parsePointerEvent(event))
+          if (isTargetMatchImage(event.target)) {
+            this.addPointer(parsePointerEvent(event))
             this.multiPointerStart(event)
           }
           break
         case 'pointermove':
-          this.multiPointerMove(event, [ReactImageLightbox.parsePointerEvent(event)])
+          this.multiPointerMove(event, [parsePointerEvent(event)])
           break
         case 'pointerup':
         case 'pointercancel':
-          this.removePointer(ReactImageLightbox.parsePointerEvent(event))
+          this.removePointer(parsePointerEvent(event))
           this.multiPointerEnd(event)
           break
         default:
@@ -859,10 +807,8 @@ class ReactImageLightbox extends Component<Props, State> {
   }
 
   handleTouchStart: TouchEventHandler<HTMLDivElement> = event => {
-    if (this.shouldHandleEvent(SOURCE_TOUCH) && ReactImageLightbox.isTargetMatchImage(event.target)) {
-      ;[].forEach.call(event.changedTouches, (eventTouch: any) =>
-        this.addPointer(ReactImageLightbox.parseTouchPointer(eventTouch))
-      )
+    if (this.shouldHandleEvent(SOURCE_TOUCH) && isTargetMatchImage(event.target)) {
+      ;[].forEach.call(event.changedTouches, (eventTouch: any) => this.addPointer(parseTouchPointer(eventTouch)))
       this.multiPointerStart(event as unknown as React.MouseEvent<HTMLDivElement>)
     }
   }
@@ -871,16 +817,14 @@ class ReactImageLightbox extends Component<Props, State> {
     if (this.shouldHandleEvent(SOURCE_TOUCH)) {
       this.multiPointerMove(
         event,
-        [].map.call(event.changedTouches, (eventTouch: any) => ReactImageLightbox.parseTouchPointer(eventTouch))
+        [].map.call(event.changedTouches, (eventTouch: any) => parseTouchPointer(eventTouch))
       )
     }
   }
 
   handleTouchEnd(event: any) {
     if (this.shouldHandleEvent(SOURCE_TOUCH)) {
-      ;[].map.call(event.changedTouches, (touch: any) =>
-        this.removePointer(ReactImageLightbox.parseTouchPointer(touch))
-      )
+      ;[].map.call(event.changedTouches, (touch: any) => this.removePointer(parseTouchPointer(touch)))
       this.multiPointerEnd(event)
     }
   }
@@ -1365,7 +1309,7 @@ class ReactImageLightbox extends Component<Props, State> {
 
       const imageStyle: React.CSSProperties = {
         ...transitionStyle,
-        ...ReactImageLightbox.getTransform({
+        ...getTransform({
           ...transforms,
           ...bestImageInfo
         })
