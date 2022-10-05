@@ -1,4 +1,7 @@
+import { useState } from 'react'
+
 export const useLightbox = () => {
+  const [zoomLevel, setZoomLevel] = useState()
   const _setTimeout = (func: any, time: any) => {
     const id = setTimeout(() => {
       this.timeouts = this.timeouts.filter((tid: any) => tid !== id)

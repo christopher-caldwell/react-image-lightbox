@@ -1,4 +1,5 @@
-import { FC, LegacyRef, MouseEventHandler } from 'react'
+import { FC, ReactNode, RefObject } from 'react'
+import type { Props as ModalProps } from 'react-modal'
 
 import { Close } from './Close'
 import { ZoomControl } from './ZoomControl'
@@ -64,17 +65,17 @@ export const Toolbar: FC<ToolbarProps> = ({
 }
 
 export interface ToolbarProps {
-  toolbarButtons?: JSX.Element[]
+  toolbarButtons?: ReactNode[]
   imageTitle?: string
   enableZoom: boolean
-  closeLabel: string
+  closeLabel?: string
   isAnimating: () => boolean
-  requestClose: MouseEventHandler<HTMLButtonElement>
+  requestClose: ModalProps['onRequestClose']
   zoomInLabel?: string
   zoomOutLabel?: string
   handleZoomInButtonClick?: () => void
   handleZoomOutButtonClick?: () => void
-  zoomOutButton: LegacyRef<HTMLButtonElement> | undefined
-  zoomInButton: LegacyRef<HTMLButtonElement> | undefined
+  zoomOutButton: RefObject<HTMLButtonElement> | undefined
+  zoomInButton: RefObject<HTMLButtonElement> | undefined
   zoomLevel: number
 }

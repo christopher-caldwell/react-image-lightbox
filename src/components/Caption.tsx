@@ -1,4 +1,4 @@
-import { FC, LegacyRef, WheelEventHandler } from 'react'
+import { FC, LegacyRef, ReactNode, WheelEventHandler } from 'react'
 
 export const Caption: FC<Props> = ({ imageCaption, handleCaptionMousewheel, captionRef }) => {
   return (
@@ -16,5 +16,5 @@ export const Caption: FC<Props> = ({ imageCaption, handleCaptionMousewheel, capt
 interface Props {
   handleCaptionMousewheel: WheelEventHandler<HTMLDivElement>
   captionRef: LegacyRef<HTMLDivElement> | undefined
-  imageCaption: string
+  imageCaption: ReactNode
 }

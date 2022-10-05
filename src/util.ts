@@ -1,7 +1,7 @@
 /**
  * Placeholder for future translate functionality
  */
-export function translate(str: any, replaceStrings = null) {
+export function translate(str: string, replaceStrings?: Record<string, string>) {
   if (!str) {
     return ''
   }
@@ -34,8 +34,8 @@ const isCrossOriginFrame = () => {
 
 // Get the highest window context that isn't cross-origin
 // (When in an iframe)
-// @ts-expect-error TS(7023): 'getHighestSafeWindowContext' implicitly has retur... Remove this comment to see the full error message
-export function getHighestSafeWindowContext(self = global.window.self) {
+
+export function getHighestSafeWindowContext(self = global.window.self): Window {
   // If we reached the top level, return self
   if (self === global.window.top) {
     return self

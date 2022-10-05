@@ -1,4 +1,4 @@
-import { FC, MouseEventHandler } from 'react'
+import { FC } from 'react'
 
 export const NavButton: FC<Props> = ({ direction, requestMove, isAnimating, label }) => {
   return (
@@ -8,14 +8,16 @@ export const NavButton: FC<Props> = ({ direction, requestMove, isAnimating, labe
       key='next'
       aria-label={label}
       title={label}
-      onClick={!isAnimating() ? requestMove : undefined} // Ignore clicks during animation
+      onClick={!isAnimating() ? e => requestMove(e as unknown as React.MouseEvent<HTMLDivElement>) : undefined} // Ignore clicks during animation
     />
   )
 }
 
 interface Props {
   direction: 'Prev' | 'Next'
-  label: string
+  label?: string
   isAnimating: () => boolean
-  requestMove: MouseEventHandler<HTMLButtonElement>
+  requestMove: (
+    event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement>
+  ) => void
 }
