@@ -51,10 +51,10 @@ export const Lightbox: FC<OwnProps> = props => {
     requestClose,
     outerEl,
     handleOuterMousewheel,
-    // handleMouseDown,
-    // handleMouseMove,
-    // handleTouchStart,
-    // handleTouchMove,
+    handleMouseDown,
+    handleMouseMove,
+    handleTouchStart,
+    handleTouchMove,
     handleKeyInput,
     closeIfClickInner,
     zoomInBtn,
@@ -231,12 +231,11 @@ export const Lightbox: FC<OwnProps> = props => {
           animationDirection: isClosing ? 'normal' : 'reverse'
         }}
         ref={outerEl}
-        // This can probs be removed.
         onWheel={handleOuterMousewheel}
-        // onMouseMove={handleMouseMove}
-        // onMouseDown={handleMouseDown}
-        // onTouchStart={handleTouchStart}
-        // onTouchMove={handleTouchMove}
+        onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         tabIndex={-1} // Enables key handlers on div
         onKeyDown={handleKeyInput}
         onKeyUp={handleKeyInput}

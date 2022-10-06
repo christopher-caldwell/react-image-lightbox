@@ -292,9 +292,9 @@ export const useLightbox = (props: OwnProps) => {
   }
 
   /** Detach key and mouse input events */
-  const isAnimating = () => {
+  const isAnimating = useCallback(() => {
     return shouldAnimate || isClosing
-  }
+  }, [isClosing, shouldAnimate])
 
   const _clearTimeout = (id: NodeJS.Timeout | null) => {
     timeouts.current = timeouts.current.filter(tid => tid !== id)
@@ -302,7 +302,7 @@ export const useLightbox = (props: OwnProps) => {
     clearTimeout(id)
   }
 
-  const setPreventInnerClose = () => {
+  const setPreventInnerClose = useCallback(() => {
     if (preventInnerCloseTimeout.current) {
       _clearTimeout(preventInnerCloseTimeout.current)
     }
@@ -311,12 +311,12 @@ export const useLightbox = (props: OwnProps) => {
       preventInnerClose.current = false
       preventInnerCloseTimeout.current = null
     }, 100)
-  }
+  }, [])
 
   /**
    * Get the size of the lightbox in pixels
    */
-  const getLightboxRect = () => {
+  const getLightboxRect = useCallback(() => {
     if (outerEl.current) {
       return outerEl.current.getBoundingClientRect()
     }
@@ -329,35 +329,38 @@ export const useLightbox = (props: OwnProps) => {
       bottom: 0,
       left: 0
     }
-  }
+  }, [outerEl])
 
   /**  Get sizing for when an image is larger than the window */
-  const getFitSizes = (width: number, height: number, stretch?: boolean) => {
-    const boxSize = getLightboxRect()
-    let maxHeight = boxSize.height - imagePadding * 2
-    let maxWidth = boxSize.width - imagePadding * 2
+  const getFitSizes = useCallback(
+    (width: number, height: number, stretch?: boolean) => {
+      const boxSize = getLightboxRect()
+      let maxHeight = boxSize.height - imagePadding * 2
+      let maxWidth = boxSize.width - imagePadding * 2
 
-    if (!stretch) {
-      maxHeight = Math.min(maxHeight, height)
-      maxWidth = Math.min(maxWidth, width)
-    }
-
-    const maxRatio = maxWidth / maxHeight
-    const srcRatio = width / height
-
-    if (maxRatio > srcRatio) {
-      // height is the constraining dimension of the photo
-      return {
-        width: (width * maxHeight) / height,
-        height: maxHeight
+      if (!stretch) {
+        maxHeight = Math.min(maxHeight, height)
+        maxWidth = Math.min(maxWidth, width)
       }
-    }
 
-    return {
-      width: maxWidth,
-      height: (height * maxWidth) / width
-    }
-  }
+      const maxRatio = maxWidth / maxHeight
+      const srcRatio = width / height
+
+      if (maxRatio > srcRatio) {
+        // height is the constraining dimension of the photo
+        return {
+          width: (width * maxHeight) / height,
+          height: maxHeight
+        }
+      }
+
+      return {
+        width: maxWidth,
+        height: (height * maxWidth) / width
+      }
+    },
+    [getLightboxRect, imagePadding]
+  )
 
   // Get image src types
   const getSrcTypes = () => {
@@ -396,9 +399,12 @@ export const useLightbox = (props: OwnProps) => {
   /**
    * Get sizing when the image is scaled
    */
-  const getZoomMultiplier = (newZoomLevel = zoomLevel) => {
-    return ZOOM_RATIO ** newZoomLevel
-  }
+  const getZoomMultiplier = useCallback(
+    (newZoomLevel = zoomLevel) => {
+      return ZOOM_RATIO ** newZoomLevel
+    },
+    [zoomLevel]
+  )
 
   const handleKeyInput: NonNullable<React.DOMAttributes<HTMLDivElement>['onKeyUp']> = event => {
     event.stopPropagation()
@@ -474,14 +480,17 @@ export const useLightbox = (props: OwnProps) => {
     }
   }
 
-  const handlePinchStart = (pointerList: Pointer[]) => {
-    if (!props.enableZoom) {
-      return
-    }
-    currentAction.current = ACTION_PINCH
-    pinchTouchList.current = pointerList.map(({ id, x, y }) => ({ id, x, y }))
-    pinchDistance.current = calculatePinchDistance()
-  }
+  const handlePinchStart = useCallback(
+    (pointerList: Pointer[]) => {
+      if (!props.enableZoom) {
+        return
+      }
+      currentAction.current = ACTION_PINCH
+      pinchTouchList.current = pointerList.map(({ id, x, y }) => ({ id, x, y }))
+      pinchDistance.current = calculatePinchDistance()
+    },
+    [props.enableZoom]
+  )
 
   const handlePinchEnd = () => {
     currentAction.current = ACTION_NONE
@@ -608,7 +617,7 @@ export const useLightbox = (props: OwnProps) => {
   }
 
   const filterPointersBySource = () => {
-    pointerList.current = pointerList.current.filter(({ source }: any) => source === eventsSource.current)
+    pointerList.current = pointerList.current.filter(({ source }) => source === eventsSource.current)
   }
 
   const shouldHandleEvent = useCallback((source: number) => {
@@ -721,6 +730,85 @@ export const useLightbox = (props: OwnProps) => {
     [offsetX, offsetY]
   )
 
+  /** Get info for the best suited image to display with the given srcType  */
+  const getBestImageForType = useCallback(
+    (
+      srcType: string
+    ): {
+      src: string
+      height: number
+      width: number
+      targetHeight?: number
+      targetWidth?: number
+    } | null => {
+      //@ts-expect-error FIXME JS-ville
+      let imageSrc = props[srcType] as string
+      let fitSizes: Partial<{
+        width: number
+        height: number
+      }> = {}
+
+      //@ts-expect-error FIXME JS-ville
+      const thumbnailImage = props[`${srcType}Thumbnail`] as string
+      if (isImageLoaded(imageSrc)) {
+        // Use full-size image if available
+
+        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height)
+      } else if (isImageLoaded(thumbnailImage)) {
+        // Fall back to using thumbnail if the image has not been loaded
+        imageSrc = thumbnailImage
+        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height, true)
+      } else {
+        return null
+      }
+
+      return {
+        src: imageSrc,
+        height: imageCache.current[imageSrc].height,
+        width: imageCache.current[imageSrc].width,
+        targetHeight: fitSizes.height,
+        targetWidth: fitSizes.width
+      }
+    },
+    [getFitSizes, props]
+  )
+
+  const getMaxOffsets = useCallback(
+    (newZoomLevel = zoomLevel) => {
+      const currentImageInfo = getBestImageForType('mainSrc')
+      if (currentImageInfo === null) {
+        return { maxX: 0, minX: 0, maxY: 0, minY: 0 }
+      }
+
+      const boxSize = getLightboxRect()
+      const zoomMultiplier = getZoomMultiplier(newZoomLevel)
+
+      let maxX = 0
+      if (zoomMultiplier * currentImageInfo.width - boxSize.width < 0) {
+        // if there is still blank space in the X dimension, don't limit except to the opposite edge
+        maxX = (boxSize.width - zoomMultiplier * currentImageInfo.width) / 2
+      } else {
+        maxX = (zoomMultiplier * currentImageInfo.width - boxSize.width) / 2
+      }
+
+      let maxY = 0
+      if (zoomMultiplier * currentImageInfo.height - boxSize.height < 0) {
+        // if there is still blank space in the Y dimension, don't limit except to the opposite edge
+        maxY = (boxSize.height - zoomMultiplier * currentImageInfo.height) / 2
+      } else {
+        maxY = (zoomMultiplier * currentImageInfo.height - boxSize.height) / 2
+      }
+
+      return {
+        maxX,
+        maxY,
+        minX: -1 * maxX,
+        minY: -1 * maxY
+      }
+    },
+    [getBestImageForType, getLightboxRect, getZoomMultiplier, zoomLevel]
+  )
+
   const changeZoom = useCallback(
     (newZoomLevel: number, clientX?: number, clientY?: number) => {
       // Ignore if zoom disabled
@@ -816,7 +904,7 @@ export const useLightbox = (props: OwnProps) => {
   )
 
   const multiPointerMove = useCallback(
-    (event: any, pointerList: any) => {
+    (event: any, pointerList: Pointer[]) => {
       switch (currentAction.current) {
         case ACTION_MOVE: {
           // Unable to preventDefault inside passive event listener invocation.
@@ -859,7 +947,7 @@ export const useLightbox = (props: OwnProps) => {
       const xDiff = swipeEndX.current - swipeStartX.current
       const xDiffAbs = Math.abs(xDiff)
       const yDiffAbs = Math.abs(swipeEndY.current - swipeStartY.current)
-
+      console.log('looks like it gets here when swiping and doesnt move.')
       currentAction.current = ACTION_NONE
       swipeStartX.current = 0
       swipeStartY.current = 0
@@ -898,6 +986,7 @@ export const useLightbox = (props: OwnProps) => {
           handleMoveEnd(event)
           break
         case ACTION_SWIPE:
+          console.log(event)
           handleSwipeEnd(event)
           break
         case ACTION_PINCH:
@@ -1011,85 +1100,6 @@ export const useLightbox = (props: OwnProps) => {
       }
     },
     [multiPointerEnd, multiPointerMove, multiPointerStart, shouldHandleEvent]
-  )
-
-  /** Get info for the best suited image to display with the given srcType  */
-  const getBestImageForType = useCallback(
-    (
-      srcType: string
-    ): {
-      src: string
-      height: number
-      width: number
-      targetHeight?: number
-      targetWidth?: number
-    } | null => {
-      //@ts-expect-error FIXME JS-ville
-      let imageSrc = props[srcType] as string
-      let fitSizes: Partial<{
-        width: number
-        height: number
-      }> = {}
-
-      //@ts-expect-error FIXME JS-ville
-      const thumbnailImage = props[`${srcType}Thumbnail`] as string
-      if (isImageLoaded(imageSrc)) {
-        // Use full-size image if available
-
-        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height)
-      } else if (isImageLoaded(thumbnailImage)) {
-        // Fall back to using thumbnail if the image has not been loaded
-        imageSrc = thumbnailImage
-        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height, true)
-      } else {
-        return null
-      }
-
-      return {
-        src: imageSrc,
-        height: imageCache.current[imageSrc].height,
-        width: imageCache.current[imageSrc].width,
-        targetHeight: fitSizes.height,
-        targetWidth: fitSizes.width
-      }
-    },
-    [getFitSizes, props]
-  )
-
-  const getMaxOffsets = useCallback(
-    (newZoomLevel = zoomLevel) => {
-      const currentImageInfo = getBestImageForType('mainSrc')
-      if (currentImageInfo === null) {
-        return { maxX: 0, minX: 0, maxY: 0, minY: 0 }
-      }
-
-      const boxSize = getLightboxRect()
-      const zoomMultiplier = getZoomMultiplier(newZoomLevel)
-
-      let maxX = 0
-      if (zoomMultiplier * currentImageInfo.width - boxSize.width < 0) {
-        // if there is still blank space in the X dimension, don't limit except to the opposite edge
-        maxX = (boxSize.width - zoomMultiplier * currentImageInfo.width) / 2
-      } else {
-        maxX = (zoomMultiplier * currentImageInfo.width - boxSize.width) / 2
-      }
-
-      let maxY = 0
-      if (zoomMultiplier * currentImageInfo.height - boxSize.height < 0) {
-        // if there is still blank space in the Y dimension, don't limit except to the opposite edge
-        maxY = (boxSize.height - zoomMultiplier * currentImageInfo.height) / 2
-      } else {
-        maxY = (zoomMultiplier * currentImageInfo.height - boxSize.height) / 2
-      }
-
-      return {
-        maxX,
-        maxY,
-        minX: -1 * maxX,
-        minY: -1 * maxY
-      }
-    },
-    [getBestImageForType, getLightboxRect, getZoomMultiplier, zoomLevel]
   )
 
   const requestMove = (
