@@ -1,3 +1,5 @@
+// Non functional WIP to improve using swipeable views
+
 import { FC, useState } from 'react'
 import { Dialog, styled, IconButton } from '@mui/material'
 import RightArrow from '@mui/icons-material/ChevronRight'

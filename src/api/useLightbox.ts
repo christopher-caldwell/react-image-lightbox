@@ -1128,26 +1128,23 @@ export const useLightbox = (props: OwnProps) => {
     }
   }
 
-  const multiPointerStart: React.MouseEventHandler<HTMLDivElement> = useCallback(
-    event => {
-      handleEnd(null)
-      switch (pointerList.current.length) {
-        case 1: {
-          // event.preventDefault()
-          decideMoveOrSwipe(pointerList.current[0])
-          break
-        }
-        case 2: {
-          // event.preventDefault()
-          handlePinchStart(pointerList.current)
-          break
-        }
-        default:
-          break
+  const multiPointerStart: React.MouseEventHandler<HTMLDivElement> = useCallback(() => {
+    handleEnd(null)
+    switch (pointerList.current.length) {
+      case 1: {
+        // event.preventDefault()
+        decideMoveOrSwipe(pointerList.current[0])
+        break
       }
-    },
-    [decideMoveOrSwipe, handleEnd, handlePinchStart]
-  )
+      case 2: {
+        // event.preventDefault()
+        handlePinchStart(pointerList.current)
+        break
+      }
+      default:
+        break
+    }
+  }, [decideMoveOrSwipe, handleEnd, handlePinchStart])
 
   const handlePointerEvent = useCallback(
     (event: any) => {

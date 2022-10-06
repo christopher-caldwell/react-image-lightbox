@@ -1,3 +1,5 @@
+// Original SRC: https://github.com/frontend-collective/react-image-lightbox
+
 import React, {
   Component,
   RefObject,
