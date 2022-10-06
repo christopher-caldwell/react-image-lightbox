@@ -7,6 +7,7 @@ import image1 from './images/1.jpg'
 import image2 from './images/2.jpg'
 import image3 from './images/3.jpg'
 import image4 from './images/4.jpg'
+import { Layout } from './components'
 
 const images = [image1, image2, image3, image4]
 
@@ -15,7 +16,9 @@ export const App: FC = () => {
     useControlHelper(images)
   return (
     <>
-      <Button onClick={toggleOpen}>Open</Button>
+      <Layout>
+        <Button onClick={toggleOpen}>Open</Button>
+      </Layout>
       <Lightbox
         isOpen={isOpen}
         mainSrc={mainImage}
