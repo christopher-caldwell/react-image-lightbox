@@ -71,6 +71,8 @@ const getTransform = ({ x = 0, y = 0, zoom = 1, width, targetWidth }: any) => {
   }
 }
 
+// All of the prevent defaults are commented on passive listeners. They seem to be serving no purpose and are erroring in a console.
+
 export const useLightbox = (props: OwnProps) => {
   const { animationDisabled, enableZoom, imagePadding = 0 } = props
   const forceUpdate = useForceUpdate()
@@ -435,7 +437,7 @@ export const useLightbox = (props: OwnProps) => {
     switch (keyCode) {
       // ESC key closes the lightbox
       case KEYS.ESC:
-        event.preventDefault()
+        // event.preventDefault()
         requestClose?.(event)
         break
 
@@ -445,7 +447,7 @@ export const useLightbox = (props: OwnProps) => {
           return
         }
 
-        event.preventDefault()
+        // event.preventDefault()
         keyPressed.current = true
         requestMovePrev(event)
         break
@@ -456,7 +458,7 @@ export const useLightbox = (props: OwnProps) => {
           return
         }
 
-        event.preventDefault()
+        // event.preventDefault()
         keyPressed.current = true
         requestMoveNext(event)
         break
@@ -904,21 +906,20 @@ export const useLightbox = (props: OwnProps) => {
   )
 
   const multiPointerMove = useCallback(
-    (event: any, pointerList: Pointer[]) => {
+    (_: any, pointerList: Pointer[]) => {
       switch (currentAction.current) {
         case ACTION_MOVE: {
-          // Unable to preventDefault inside passive event listener invocation.
-          event.preventDefault()
+          // event.preventDefault()
           handleMove(pointerList[0])
           break
         }
         case ACTION_SWIPE: {
-          event.preventDefault()
+          // event.preventDefault()
           handleSwipe(pointerList[0])
           break
         }
         case ACTION_PINCH: {
-          event.preventDefault()
+          // event.preventDefault()
           handlePinch(pointerList)
           break
         }
@@ -927,6 +928,81 @@ export const useLightbox = (props: OwnProps) => {
       }
     },
     [handleMove, handlePinch]
+  )
+
+  const requestMove = useCallback(
+    (
+      direction: 'prev' | 'next',
+      event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
+    ) => {
+      // Reset the zoom level on image move
+      let nextZoom = MIN_ZOOM_LEVEL
+      let nextOffsetX = 0
+      let nextOffsetY = 0
+      let nextShouldAnimate = !!props.animationDisabled
+
+      // Enable animated states
+      if (!props.animationDisabled && (!keyPressed.current || props.animationOnKeyInput)) {
+        nextShouldAnimate = true
+        _setTimeout(() => {
+          setShouldAnimate(false)
+        }, props.animationDuration)
+      }
+      keyPressed.current = false
+
+      moveRequested.current = true
+
+      setZoomLevel(nextZoom)
+      setOffsetX(nextOffsetX)
+      setOffsetY(nextOffsetY)
+      setShouldAnimate(nextShouldAnimate)
+      if (direction === 'prev') {
+        keyCounter.current -= 1
+        props.onMovePrevRequest?.(event)
+      } else {
+        keyCounter.current += 1
+        props.onMoveNextRequest?.(event)
+      }
+    },
+    [props]
+  )
+
+  /** Request that the lightbox be closed */
+  const requestClose: NonNullable<ModalProps['onRequestClose']> = event => {
+    // Call the parent close request
+    const closeLightbox = () => props.onCloseRequest?.(event)
+
+    if (props.animationDisabled || (event.type === 'keydown' && !props.animationOnKeyInput)) {
+      // No animation
+      closeLightbox()
+      return
+    }
+
+    // With animation
+    // Start closing animation
+    setIsClosing(true)
+
+    // Perform the actual closing at the end of the animation
+    _setTimeout(closeLightbox, props.animationDuration)
+  }
+
+  const requestMoveNext = useCallback(
+    (
+      event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
+    ) => {
+      requestMove('next', event)
+    },
+    [requestMove]
+  )
+
+  /** Request to transition to the previous image  */
+  const requestMovePrev = useCallback(
+    (
+      event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
+    ) => {
+      requestMove('prev', event)
+    },
+    [requestMove]
   )
 
   const handleSwipeStart = ({ x: clientX, y: clientY }: any) => {
@@ -955,27 +1031,31 @@ export const useLightbox = (props: OwnProps) => {
       swipeEndY.current = 0
 
       if (!event || isAnimating() || xDiffAbs < yDiffAbs * 1.5) {
+        console.log('1st return')
         return
       }
 
       if (xDiffAbs < MIN_SWIPE_DISTANCE) {
         const boxRect = getLightboxRect()
         if (xDiffAbs < boxRect.width / 4) {
+          console.log('2nd return')
           return
         }
       }
 
       if (xDiff > 0 && props.prevSrc) {
-        event.preventDefault()
-        // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-        this.requestMovePrev()
+        console.log('block 1')
+        // event.preventDefault()
+
+        requestMovePrev(event)
       } else if (xDiff < 0 && props.nextSrc) {
-        event.preventDefault()
-        // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-        this.requestMoveNext()
+        console.log('block 2')
+        // event.preventDefault()
+
+        requestMoveNext(event)
       }
     },
-    [getLightboxRect, isAnimating, props.nextSrc, props.prevSrc]
+    [getLightboxRect, isAnimating, props.nextSrc, props.prevSrc, requestMoveNext, requestMovePrev]
   )
 
   const handleEnd = useCallback(
@@ -986,12 +1066,10 @@ export const useLightbox = (props: OwnProps) => {
           handleMoveEnd(event)
           break
         case ACTION_SWIPE:
-          console.log(event)
           handleSwipeEnd(event)
           break
         case ACTION_PINCH:
-          // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-          this.handlePinchEnd(event)
+          handlePinchEnd()
           break
         default:
           break
@@ -1012,12 +1090,12 @@ export const useLightbox = (props: OwnProps) => {
           break
         }
         case 1: {
-          event.preventDefault()
+          // event.preventDefault()
           decideMoveOrSwipe(pointerList.current[0])
           break
         }
         case 2: {
-          event.preventDefault()
+          // event.preventDefault()
           handlePinchStart(pointerList.current)
           break
         }
@@ -1060,12 +1138,12 @@ export const useLightbox = (props: OwnProps) => {
       handleEnd(null)
       switch (pointerList.current.length) {
         case 1: {
-          event.preventDefault()
+          // event.preventDefault()
           decideMoveOrSwipe(pointerList.current[0])
           break
         }
         case 2: {
-          event.preventDefault()
+          // event.preventDefault()
           handlePinchStart(pointerList.current)
           break
         }
@@ -1102,72 +1180,6 @@ export const useLightbox = (props: OwnProps) => {
     [multiPointerEnd, multiPointerMove, multiPointerStart, shouldHandleEvent]
   )
 
-  const requestMove = (
-    direction: 'prev' | 'next',
-    event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
-  ) => {
-    // Reset the zoom level on image move
-    let nextZoom = MIN_ZOOM_LEVEL
-    let nextOffsetX = 0
-    let nextOffsetY = 0
-    let nextShouldAnimate = !!props.animationDisabled
-
-    // Enable animated states
-    if (!props.animationDisabled && (!keyPressed.current || props.animationOnKeyInput)) {
-      nextShouldAnimate = true
-      _setTimeout(() => {
-        setShouldAnimate(false)
-      }, props.animationDuration)
-    }
-    keyPressed.current = false
-
-    moveRequested.current = true
-
-    setZoomLevel(nextZoom)
-    setOffsetX(nextOffsetX)
-    setOffsetY(nextOffsetY)
-    setShouldAnimate(nextShouldAnimate)
-    if (direction === 'prev') {
-      keyCounter.current -= 1
-      props.onMovePrevRequest?.(event)
-    } else {
-      keyCounter.current += 1
-      props.onMoveNextRequest?.(event)
-    }
-  }
-
-  /** Request that the lightbox be closed */
-  const requestClose: NonNullable<ModalProps['onRequestClose']> = event => {
-    // Call the parent close request
-    const closeLightbox = () => props.onCloseRequest?.(event)
-
-    if (props.animationDisabled || (event.type === 'keydown' && !props.animationOnKeyInput)) {
-      // No animation
-      closeLightbox()
-      return
-    }
-
-    // With animation
-    // Start closing animation
-    setIsClosing(true)
-
-    // Perform the actual closing at the end of the animation
-    _setTimeout(closeLightbox, props.animationDuration)
-  }
-
-  const requestMoveNext = (
-    event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
-  ) => {
-    requestMove('next', event)
-  }
-
-  /** Request to transition to the previous image  */
-  const requestMovePrev = (
-    event: React.KeyboardEvent<HTMLDivElement> | React.WheelEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
-  ) => {
-    requestMove('prev', event)
-  }
-
   useEffect(() => {
     if (!props.animationDisabled) {
       // Make opening animation play
@@ -1186,6 +1198,11 @@ export const useLightbox = (props: OwnProps) => {
       pointerup: handlePointerEvent,
       pointercancel: handlePointerEvent
     }
+
+    Object.keys(listeners.current).forEach(type => {
+      windowContext.current?.addEventListener(type, listeners.current[type])
+    })
+
     loadAllImages()
   }, [props.animationDisabled, loadAllImages, handleWindowResize, handleMouseUp, handleTouchEnd, handlePointerEvent])
 
