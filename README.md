@@ -1,5 +1,13 @@
 # React Image Lightbox
 
+<p align="center">
+  <h6/>
+  <img src="https://img.shields.io/npm/v/@caldwell619/react-image-lightbox">
+  <img src="https://img.shields.io/bundlephobia/min/@caldwell619/react-image-lightbox">
+  <img src="https://img.shields.io/github/last-commit/christopher-caldwell/react-image-lightbox">
+  <img src="https://img.shields.io/npm/types/@caldwell619/react-image-lightbox">
+</p>
+
 Forked from [react-image-lightbox](https://github.com/frontend-collective/react-image-lightbox).
 
 A flexible lightbox component for displaying images in a React project.
