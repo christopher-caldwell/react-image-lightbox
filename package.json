@@ -1,13 +1,13 @@
 {
   "name": "@caldwell619/react-image-lightbox",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A lightbox component for React",
   "scripts": {
     "lint": "eslint --ext .ts,.tsx src",
     "format": "prettier --write src",
     "build": "tsc && npx tscpaths -p tsconfig.json -s src -o dist && cp src/style.css dist",
     "build:watch": "nodemon --exec npm run build --watch src --ext .tsx,.ts --delay 2.5",
-    "publish:release": "sh publish.sh",
+    "publish:release": "sh scripts/publish.sh",
     "predeploy": "cd demo && yarn install && yarn run build",
     "deploy": "gh-pages -d demo/dist"
   },
