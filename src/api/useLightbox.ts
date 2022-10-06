@@ -1023,7 +1023,6 @@ export const useLightbox = (props: OwnProps) => {
       const xDiff = swipeEndX.current - swipeStartX.current
       const xDiffAbs = Math.abs(xDiff)
       const yDiffAbs = Math.abs(swipeEndY.current - swipeStartY.current)
-      console.log('looks like it gets here when swiping and doesnt move.')
       currentAction.current = ACTION_NONE
       swipeStartX.current = 0
       swipeStartY.current = 0
@@ -1031,25 +1030,21 @@ export const useLightbox = (props: OwnProps) => {
       swipeEndY.current = 0
 
       if (!event || isAnimating() || xDiffAbs < yDiffAbs * 1.5) {
-        console.log('1st return')
         return
       }
 
       if (xDiffAbs < MIN_SWIPE_DISTANCE) {
         const boxRect = getLightboxRect()
         if (xDiffAbs < boxRect.width / 4) {
-          console.log('2nd return')
           return
         }
       }
 
       if (xDiff > 0 && props.prevSrc) {
-        console.log('block 1')
         // event.preventDefault()
 
         requestMovePrev(event)
       } else if (xDiff < 0 && props.nextSrc) {
-        console.log('block 2')
         // event.preventDefault()
 
         requestMoveNext(event)

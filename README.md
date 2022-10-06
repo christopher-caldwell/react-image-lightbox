@@ -4,7 +4,7 @@ Forked from [react-image-lightbox](https://github.com/frontend-collective/react-
 
 A flexible lightbox component for displaying images in a React project.
 
-[Demo]()
+[Demo](https://christopher-caldwell.github.io/react-image-lightbox/)
 
 ## Why Fork?
 
@@ -78,14 +78,6 @@ const App = () => {
 ## Props
 
 Full, yet **WIP** [list of props](./docs/props.md)
-## Browser Compatibility
-
-| Browser | Works? |
-| :------ | :----- |
-| Chrome  | Yes    |
-| Firefox | Yes    |
-| Safari  | Yes    |
-| IE 11   | Yes    |
 
 ## Contributing
 
