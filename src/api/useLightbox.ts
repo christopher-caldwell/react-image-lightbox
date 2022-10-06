@@ -115,7 +115,7 @@ export const useLightbox = (props: OwnProps) => {
   // Used for debouncing window resize event
   const resizeTimeout = useRef<NodeJS.Timeout | null>(null)
 
-  const listeners = useRef<any>([])
+  const listeners = useRef<any>({})
 
   // Used to determine when actions are triggered by the scroll wheel
   const wheelActionTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -270,18 +270,6 @@ export const useLightbox = (props: OwnProps) => {
     }
     prevProps.current = props
   }, [props, loadAllImages])
-
-  useEffect(() => {
-    if (!props.animationDisabled) {
-      // Make opening animation play
-      setIsClosing(false)
-    }
-    windowContext.current = getHighestSafeWindowContext()
-
-    // TODO: Add listeners
-
-    loadAllImages()
-  }, [props.animationDisabled, loadAllImages])
 
   // useEffect(() => {
   //   const listenersCurrent = listeners.current
@@ -495,27 +483,6 @@ export const useLightbox = (props: OwnProps) => {
     pinchDistance.current = calculatePinchDistance()
   }
 
-  const handlePinch = (pointerList: Pointer[]) => {
-    if (!pinchTouchList.current) throw new Error('pinchTouchList is null')
-    pinchTouchList.current = pinchTouchList.current?.map(oldPointer => {
-      for (let i = 0; i < pointerList.length; i += 1) {
-        if (pointerList[i].id === oldPointer.id) {
-          return pointerList[i]
-        }
-      }
-
-      return oldPointer
-    })
-
-    const newDistance = calculatePinchDistance()
-
-    const newZoomLevel = zoomLevel + newDistance - pinchDistance.current
-
-    pinchDistance.current = newDistance
-    const { x: clientX, y: clientY } = calculatePinchCenter(pinchTouchList.current)
-    changeZoom(newZoomLevel, clientX, clientY)
-  }
-
   const handlePinchEnd = () => {
     currentAction.current = ACTION_NONE
     pinchTouchList.current = null
@@ -523,12 +490,12 @@ export const useLightbox = (props: OwnProps) => {
   }
 
   // Handle the window resize event TODO: FIXME
-  const handleWindowResize = () => {
+  const handleWindowResize = useCallback(() => {
     _clearTimeout(resizeTimeout.current)
     // OLD
     // this.resizeTimeout = this.setTimeout(this.forceUpdate.bind(this), 100)
     resizeTimeout.current = _setTimeout(() => forceUpdate(), 100)
-  }
+  }, [forceUpdate])
 
   const handleZoomInButtonClick = () => {
     const nextZoomLevel = zoomLevel + ZOOM_BUTTON_INCREMENT_SIZE
@@ -644,7 +611,7 @@ export const useLightbox = (props: OwnProps) => {
     pointerList.current = pointerList.current.filter(({ source }: any) => source === eventsSource.current)
   }
 
-  const shouldHandleEvent = (source: number) => {
+  const shouldHandleEvent = useCallback((source: number) => {
     if (eventsSource.current === source) {
       return true
     }
@@ -669,7 +636,7 @@ export const useLightbox = (props: OwnProps) => {
       default:
         return false
     }
-  }
+  }, [])
 
   const addPointer = (pointer: Pointer) => {
     pointerList.current.push(pointer)
@@ -692,36 +659,6 @@ export const useLightbox = (props: OwnProps) => {
     }
   }
 
-  const handleMouseUp: React.MouseEventHandler<HTMLDivElement> = event => {
-    if (shouldHandleEvent(SOURCE_MOUSE)) {
-      removePointer(parseMouseEvent(event))
-      multiPointerEnd(event)
-    }
-  }
-
-  const handlePointerEvent = (event: any) => {
-    if (shouldHandleEvent(SOURCE_POINTER)) {
-      switch (event.type) {
-        case 'pointerdown':
-          if (isTargetMatchImage(event.target)) {
-            addPointer(parsePointerEvent(event))
-            multiPointerStart(event)
-          }
-          break
-        case 'pointermove':
-          multiPointerMove(event, [parsePointerEvent(event)])
-          break
-        case 'pointerup':
-        case 'pointercancel':
-          removePointer(parsePointerEvent(event))
-          multiPointerEnd(event)
-          break
-        default:
-          break
-      }
-    }
-  }
-
   const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = event => {
     if (shouldHandleEvent(SOURCE_TOUCH) && isTargetMatchImage(event.target)) {
       ;[].forEach.call(event.changedTouches, (eventTouch: any) => addPointer(parseTouchPointer(eventTouch)))
@@ -738,101 +675,171 @@ export const useLightbox = (props: OwnProps) => {
     }
   }
 
-  const decideMoveOrSwipe = (pointer: any) => {
-    if (zoomLevel <= MIN_ZOOM_LEVEL) {
-      handleSwipeStart(pointer)
-    } else {
-      handleMoveStart(pointer)
-    }
-  }
-
-  const multiPointerStart: React.MouseEventHandler<HTMLDivElement> = event => {
-    handleEnd(null)
-    switch (pointerList.current.length) {
-      case 1: {
-        event.preventDefault()
-        decideMoveOrSwipe(pointerList.current[0])
-        break
-      }
-      case 2: {
-        event.preventDefault()
-        handlePinchStart(pointerList.current)
-        break
-      }
-      default:
-        break
-    }
-  }
-
-  const multiPointerMove = (event: any, pointerList: any) => {
-    switch (currentAction.current) {
-      case ACTION_MOVE: {
-        event.preventDefault()
-        handleMove(pointerList[0])
-        break
-      }
-      case ACTION_SWIPE: {
-        event.preventDefault()
-        handleSwipe(pointerList[0])
-        break
-      }
-      case ACTION_PINCH: {
-        event.preventDefault()
-        handlePinch(pointerList)
-        break
-      }
-      default:
-        break
-    }
-  }
-
-  const handleEnd = (event: any) => {
-    switch (currentAction.current) {
-      case ACTION_MOVE:
-        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-        handleMoveEnd(event)
-        break
-      case ACTION_SWIPE:
-        handleSwipeEnd(event)
-        break
-      case ACTION_PINCH:
-        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-        this.handlePinchEnd(event)
-        break
-      default:
-        break
-    }
-  }
-
   // Handle move start over the lightbox container
   // This happens:
   // - On a mouseDown event
   // - On a touchstart event
-  // @ts-expect-error TS(7031): Binding element 'clientX' implicitly has an 'any' ... Remove this comment to see the full error message
-  const handleMoveStart = ({ x: clientX, y: clientY }) => {
-    if (!props.enableZoom) {
-      return
-    }
-    currentAction.current = ACTION_MOVE
-    moveStartX.current = clientX
-    moveStartY.current = clientY
-    moveStartOffsetX.current = offsetX
-    moveStartOffsetY.current = offsetY
-  }
+  const handleMoveStart = useCallback(
+    ({ x: clientX, y: clientY }: any) => {
+      if (!props.enableZoom) {
+        return
+      }
+      currentAction.current = ACTION_MOVE
+      moveStartX.current = clientX
+      moveStartY.current = clientY
+      moveStartOffsetX.current = offsetX
+      moveStartOffsetY.current = offsetY
+    },
+    [offsetX, offsetY, props.enableZoom]
+  )
+
+  const decideMoveOrSwipe = useCallback(
+    (pointer: any) => {
+      if (zoomLevel <= MIN_ZOOM_LEVEL) {
+        handleSwipeStart(pointer)
+      } else {
+        handleMoveStart(pointer)
+      }
+    },
+    [handleMoveStart, zoomLevel]
+  )
 
   /** Handle dragging over the lightbox container
    This happens:
    - After a mouseDown and before a mouseUp event
   - After a touchstart and before a touchend event
    */
-  const handleMove = ({ x: clientX, y: clientY }: any) => {
-    const newOffsetX = moveStartX.current - clientX + moveStartOffsetX.current
-    const newOffsetY = moveStartY.current - clientY + moveStartOffsetY.current
-    if (offsetX !== newOffsetX || offsetY !== newOffsetY) {
-      setOffsetX(newOffsetX)
-      setOffsetY(newOffsetY)
-    }
-  }
+  const handleMove = useCallback(
+    ({ x: clientX, y: clientY }: any) => {
+      const newOffsetX = moveStartX.current - clientX + moveStartOffsetX.current
+      const newOffsetY = moveStartY.current - clientY + moveStartOffsetY.current
+      if (offsetX !== newOffsetX || offsetY !== newOffsetY) {
+        setOffsetX(newOffsetX)
+        setOffsetY(newOffsetY)
+      }
+    },
+    [offsetX, offsetY]
+  )
+
+  const changeZoom = useCallback(
+    (newZoomLevel: number, clientX?: number, clientY?: number) => {
+      // Ignore if zoom disabled
+      if (!enableZoom) {
+        return
+      }
+
+      // Constrain zoom level to the set bounds
+      const nextZoomLevel = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, newZoomLevel))
+
+      // Ignore requests that don't change the zoom level
+      if (nextZoomLevel === zoomLevel) {
+        return
+      }
+
+      if (nextZoomLevel === MIN_ZOOM_LEVEL) {
+        // Snap back to center if zoomed all the way out
+        setZoomLevel(newZoomLevel)
+        setOffsetX(0)
+        setOffsetY(0)
+        return
+      }
+
+      const imageBaseSize = getBestImageForType('mainSrc')
+      if (imageBaseSize === null) {
+        return
+      }
+
+      const currentZoomMultiplier = getZoomMultiplier()
+      const nextZoomMultiplier = getZoomMultiplier(nextZoomLevel)
+
+      // Default to the center of the image to zoom when no mouse position specified
+      const boxRect = getLightboxRect()
+      const pointerX = typeof clientX !== 'undefined' ? clientX - boxRect.left : boxRect.width / 2
+      const pointerY = typeof clientY !== 'undefined' ? clientY - boxRect.top : boxRect.height / 2
+
+      const currentImageOffsetX = (boxRect.width - imageBaseSize.width * currentZoomMultiplier) / 2
+      const currentImageOffsetY = (boxRect.height - imageBaseSize.height * currentZoomMultiplier) / 2
+
+      const currentImageRealOffsetX = currentImageOffsetX - offsetX
+      const currentImageRealOffsetY = currentImageOffsetY - offsetY
+
+      const currentPointerXRelativeToImage = (pointerX - currentImageRealOffsetX) / currentZoomMultiplier
+      const currentPointerYRelativeToImage = (pointerY - currentImageRealOffsetY) / currentZoomMultiplier
+
+      const nextImageRealOffsetX = pointerX - currentPointerXRelativeToImage * nextZoomMultiplier
+      const nextImageRealOffsetY = pointerY - currentPointerYRelativeToImage * nextZoomMultiplier
+
+      const nextImageOffsetX = (boxRect.width - imageBaseSize.width * nextZoomMultiplier) / 2
+      const nextImageOffsetY = (boxRect.height - imageBaseSize.height * nextZoomMultiplier) / 2
+
+      let nextOffsetX = nextImageOffsetX - nextImageRealOffsetX
+      let nextOffsetY = nextImageOffsetY - nextImageRealOffsetY
+
+      // When zooming out, limit the offset so things don't get left askew
+      if (currentAction.current !== ACTION_PINCH) {
+        const maxOffsets = getMaxOffsets()
+        if (newZoomLevel > nextZoomLevel) {
+          nextOffsetX = Math.max(maxOffsets.minX, Math.min(maxOffsets.maxX, nextOffsetX))
+          nextOffsetY = Math.max(maxOffsets.minY, Math.min(maxOffsets.maxY, nextOffsetY))
+        }
+      }
+
+      setZoomLevel(newZoomLevel)
+      setOffsetX(nextOffsetX)
+      setOffsetY(nextOffsetY)
+    },
+    [enableZoom, getBestImageForType, getLightboxRect, getMaxOffsets, getZoomMultiplier, offsetX, offsetY, zoomLevel]
+  )
+
+  const handlePinch = useCallback(
+    (pointerList: Pointer[]) => {
+      if (!pinchTouchList.current) throw new Error('pinchTouchList is null')
+      pinchTouchList.current = pinchTouchList.current?.map(oldPointer => {
+        for (let i = 0; i < pointerList.length; i += 1) {
+          if (pointerList[i].id === oldPointer.id) {
+            return pointerList[i]
+          }
+        }
+
+        return oldPointer
+      })
+
+      const newDistance = calculatePinchDistance()
+
+      const newZoomLevel = zoomLevel + newDistance - pinchDistance.current
+
+      pinchDistance.current = newDistance
+      const { x: clientX, y: clientY } = calculatePinchCenter(pinchTouchList.current)
+      changeZoom(newZoomLevel, clientX, clientY)
+    },
+    [changeZoom, zoomLevel]
+  )
+
+  const multiPointerMove = useCallback(
+    (event: any, pointerList: any) => {
+      switch (currentAction.current) {
+        case ACTION_MOVE: {
+          // Unable to preventDefault inside passive event listener invocation.
+          event.preventDefault()
+          handleMove(pointerList[0])
+          break
+        }
+        case ACTION_SWIPE: {
+          event.preventDefault()
+          handleSwipe(pointerList[0])
+          break
+        }
+        case ACTION_PINCH: {
+          event.preventDefault()
+          handlePinch(pointerList)
+          break
+        }
+        default:
+          break
+      }
+    },
+    [handleMove, handlePinch]
+  )
 
   const handleSwipeStart = ({ x: clientX, y: clientY }: any) => {
     currentAction.current = ACTION_SWIPE
@@ -847,70 +854,110 @@ export const useLightbox = (props: OwnProps) => {
     swipeEndY.current = clientY
   }
 
-  const handleSwipeEnd = (event: any) => {
-    const xDiff = swipeEndX.current - swipeStartX.current
-    const xDiffAbs = Math.abs(xDiff)
-    const yDiffAbs = Math.abs(swipeEndY.current - swipeStartY.current)
+  const handleSwipeEnd = useCallback(
+    (event: any) => {
+      const xDiff = swipeEndX.current - swipeStartX.current
+      const xDiffAbs = Math.abs(xDiff)
+      const yDiffAbs = Math.abs(swipeEndY.current - swipeStartY.current)
 
-    currentAction.current = ACTION_NONE
-    swipeStartX.current = 0
-    swipeStartY.current = 0
-    swipeEndX.current = 0
-    swipeEndY.current = 0
+      currentAction.current = ACTION_NONE
+      swipeStartX.current = 0
+      swipeStartY.current = 0
+      swipeEndX.current = 0
+      swipeEndY.current = 0
 
-    if (!event || isAnimating() || xDiffAbs < yDiffAbs * 1.5) {
-      return
-    }
-
-    if (xDiffAbs < MIN_SWIPE_DISTANCE) {
-      const boxRect = getLightboxRect()
-      if (xDiffAbs < boxRect.width / 4) {
+      if (!event || isAnimating() || xDiffAbs < yDiffAbs * 1.5) {
         return
       }
-    }
 
-    if (xDiff > 0 && props.prevSrc) {
-      event.preventDefault()
-      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-      this.requestMovePrev()
-    } else if (xDiff < 0 && props.nextSrc) {
-      event.preventDefault()
-      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-      this.requestMoveNext()
-    }
-  }
-
-  const multiPointerEnd = (event: any) => {
-    if (currentAction.current !== ACTION_NONE) {
-      setPreventInnerClose()
-      handleEnd(event)
-    }
-    switch (pointerList.current.length) {
-      case 0: {
-        eventsSource.current = SOURCE_ANY
-        break
+      if (xDiffAbs < MIN_SWIPE_DISTANCE) {
+        const boxRect = getLightboxRect()
+        if (xDiffAbs < boxRect.width / 4) {
+          return
+        }
       }
-      case 1: {
+
+      if (xDiff > 0 && props.prevSrc) {
         event.preventDefault()
-        decideMoveOrSwipe(pointerList.current[0])
-        break
-      }
-      case 2: {
+        // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+        this.requestMovePrev()
+      } else if (xDiff < 0 && props.nextSrc) {
         event.preventDefault()
-        handlePinchStart(pointerList.current)
-        break
+        // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+        this.requestMoveNext()
       }
-      default:
-        break
-    }
-  }
+    },
+    [getLightboxRect, isAnimating, props.nextSrc, props.prevSrc]
+  )
 
-  const handleTouchEnd = (event: any) => {
-    if (shouldHandleEvent(SOURCE_TOUCH)) {
-      ;[].map.call(event.changedTouches, (touch: any) => removePointer(parseTouchPointer(touch)))
-      multiPointerEnd(event)
-    }
-  }
+  const handleEnd = useCallback(
+    (event: any) => {
+      switch (currentAction.current) {
+        case ACTION_MOVE:
+          // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
+          handleMoveEnd(event)
+          break
+        case ACTION_SWIPE:
+          handleSwipeEnd(event)
+          break
+        case ACTION_PINCH:
+          // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
+          this.handlePinchEnd(event)
+          break
+        default:
+          break
+      }
+    },
+    [handleSwipeEnd]
+  )
+
+  const multiPointerEnd = useCallback(
+    (event: any) => {
+      if (currentAction.current !== ACTION_NONE) {
+        setPreventInnerClose()
+        handleEnd(event)
+      }
+      switch (pointerList.current.length) {
+        case 0: {
+          eventsSource.current = SOURCE_ANY
+          break
+        }
+        case 1: {
+          event.preventDefault()
+          decideMoveOrSwipe(pointerList.current[0])
+          break
+        }
+        case 2: {
+          event.preventDefault()
+          handlePinchStart(pointerList.current)
+          break
+        }
+        default:
+          break
+      }
+    },
+    [decideMoveOrSwipe, handleEnd, handlePinchStart, setPreventInnerClose]
+  )
+
+  const handleMouseUp: React.MouseEventHandler<HTMLDivElement> = useCallback(
+    event => {
+      if (shouldHandleEvent(SOURCE_MOUSE)) {
+        removePointer(parseMouseEvent(event))
+        multiPointerEnd(event)
+      }
+    },
+    [multiPointerEnd, shouldHandleEvent]
+  )
+
+  const handleTouchEnd = useCallback(
+    (event: any) => {
+      if (shouldHandleEvent(SOURCE_TOUCH)) {
+        ;[].map.call(event.changedTouches, (touch: any) => removePointer(parseTouchPointer(touch)))
+        multiPointerEnd(event)
+      }
+    },
+    [multiPointerEnd, shouldHandleEvent]
+  )
 
   const closeIfClickInner: React.MouseEventHandler<HTMLDivElement> = event => {
     //@ts-expect-error FIXME className is not in target
@@ -919,145 +966,131 @@ export const useLightbox = (props: OwnProps) => {
     }
   }
 
-  /** Get info for the best suited image to display with the given srcType  */
-  const getBestImageForType = (
-    srcType: string
-  ): {
-    src: string
-    height: number
-    width: number
-    targetHeight?: number
-    targetWidth?: number
-  } | null => {
-    //@ts-expect-error FIXME JS-ville
-    let imageSrc = props[srcType] as string
-    let fitSizes: Partial<{
-      width: number
-      height: number
-    }> = {}
-
-    //@ts-expect-error FIXME JS-ville
-    const thumbnailImage = props[`${srcType}Thumbnail`] as string
-    if (isImageLoaded(imageSrc)) {
-      // Use full-size image if available
-
-      fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height)
-    } else if (isImageLoaded(thumbnailImage)) {
-      // Fall back to using thumbnail if the image has not been loaded
-      imageSrc = thumbnailImage
-      fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height, true)
-    } else {
-      return null
-    }
-
-    return {
-      src: imageSrc,
-      height: imageCache.current[imageSrc].height,
-      width: imageCache.current[imageSrc].width,
-      targetHeight: fitSizes.height,
-      targetWidth: fitSizes.width
-    }
-  }
-
-  const getMaxOffsets = (newZoomLevel = zoomLevel) => {
-    const currentImageInfo = getBestImageForType('mainSrc')
-    if (currentImageInfo === null) {
-      return { maxX: 0, minX: 0, maxY: 0, minY: 0 }
-    }
-
-    const boxSize = getLightboxRect()
-    const zoomMultiplier = getZoomMultiplier(newZoomLevel)
-
-    let maxX = 0
-    if (zoomMultiplier * currentImageInfo.width - boxSize.width < 0) {
-      // if there is still blank space in the X dimension, don't limit except to the opposite edge
-      maxX = (boxSize.width - zoomMultiplier * currentImageInfo.width) / 2
-    } else {
-      maxX = (zoomMultiplier * currentImageInfo.width - boxSize.width) / 2
-    }
-
-    let maxY = 0
-    if (zoomMultiplier * currentImageInfo.height - boxSize.height < 0) {
-      // if there is still blank space in the Y dimension, don't limit except to the opposite edge
-      maxY = (boxSize.height - zoomMultiplier * currentImageInfo.height) / 2
-    } else {
-      maxY = (zoomMultiplier * currentImageInfo.height - boxSize.height) / 2
-    }
-
-    return {
-      maxX,
-      maxY,
-      minX: -1 * maxX,
-      minY: -1 * maxY
-    }
-  }
-
-  const changeZoom = (newZoomLevel: number, clientX?: number, clientY?: number) => {
-    // Ignore if zoom disabled
-    if (!enableZoom) {
-      return
-    }
-
-    // Constrain zoom level to the set bounds
-    const nextZoomLevel = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, newZoomLevel))
-
-    // Ignore requests that don't change the zoom level
-    if (nextZoomLevel === zoomLevel) {
-      return
-    }
-
-    if (nextZoomLevel === MIN_ZOOM_LEVEL) {
-      // Snap back to center if zoomed all the way out
-      setZoomLevel(newZoomLevel)
-      setOffsetX(0)
-      setOffsetY(0)
-      return
-    }
-
-    const imageBaseSize = getBestImageForType('mainSrc')
-    if (imageBaseSize === null) {
-      return
-    }
-
-    const currentZoomMultiplier = getZoomMultiplier()
-    const nextZoomMultiplier = getZoomMultiplier(nextZoomLevel)
-
-    // Default to the center of the image to zoom when no mouse position specified
-    const boxRect = getLightboxRect()
-    const pointerX = typeof clientX !== 'undefined' ? clientX - boxRect.left : boxRect.width / 2
-    const pointerY = typeof clientY !== 'undefined' ? clientY - boxRect.top : boxRect.height / 2
-
-    const currentImageOffsetX = (boxRect.width - imageBaseSize.width * currentZoomMultiplier) / 2
-    const currentImageOffsetY = (boxRect.height - imageBaseSize.height * currentZoomMultiplier) / 2
-
-    const currentImageRealOffsetX = currentImageOffsetX - offsetX
-    const currentImageRealOffsetY = currentImageOffsetY - offsetY
-
-    const currentPointerXRelativeToImage = (pointerX - currentImageRealOffsetX) / currentZoomMultiplier
-    const currentPointerYRelativeToImage = (pointerY - currentImageRealOffsetY) / currentZoomMultiplier
-
-    const nextImageRealOffsetX = pointerX - currentPointerXRelativeToImage * nextZoomMultiplier
-    const nextImageRealOffsetY = pointerY - currentPointerYRelativeToImage * nextZoomMultiplier
-
-    const nextImageOffsetX = (boxRect.width - imageBaseSize.width * nextZoomMultiplier) / 2
-    const nextImageOffsetY = (boxRect.height - imageBaseSize.height * nextZoomMultiplier) / 2
-
-    let nextOffsetX = nextImageOffsetX - nextImageRealOffsetX
-    let nextOffsetY = nextImageOffsetY - nextImageRealOffsetY
-
-    // When zooming out, limit the offset so things don't get left askew
-    if (currentAction.current !== ACTION_PINCH) {
-      const maxOffsets = getMaxOffsets()
-      if (newZoomLevel > nextZoomLevel) {
-        nextOffsetX = Math.max(maxOffsets.minX, Math.min(maxOffsets.maxX, nextOffsetX))
-        nextOffsetY = Math.max(maxOffsets.minY, Math.min(maxOffsets.maxY, nextOffsetY))
+  const multiPointerStart: React.MouseEventHandler<HTMLDivElement> = useCallback(
+    event => {
+      handleEnd(null)
+      switch (pointerList.current.length) {
+        case 1: {
+          event.preventDefault()
+          decideMoveOrSwipe(pointerList.current[0])
+          break
+        }
+        case 2: {
+          event.preventDefault()
+          handlePinchStart(pointerList.current)
+          break
+        }
+        default:
+          break
       }
-    }
+    },
+    [decideMoveOrSwipe, handleEnd, handlePinchStart]
+  )
 
-    setZoomLevel(newZoomLevel)
-    setOffsetX(nextOffsetX)
-    setOffsetY(nextOffsetY)
-  }
+  const handlePointerEvent = useCallback(
+    (event: any) => {
+      if (shouldHandleEvent(SOURCE_POINTER)) {
+        switch (event.type) {
+          case 'pointerdown':
+            if (isTargetMatchImage(event.target)) {
+              addPointer(parsePointerEvent(event))
+              multiPointerStart(event)
+            }
+            break
+          case 'pointermove':
+            multiPointerMove(event, [parsePointerEvent(event)])
+            break
+          case 'pointerup':
+          case 'pointercancel':
+            removePointer(parsePointerEvent(event))
+            multiPointerEnd(event)
+            break
+          default:
+            break
+        }
+      }
+    },
+    [multiPointerEnd, multiPointerMove, multiPointerStart, shouldHandleEvent]
+  )
+
+  /** Get info for the best suited image to display with the given srcType  */
+  const getBestImageForType = useCallback(
+    (
+      srcType: string
+    ): {
+      src: string
+      height: number
+      width: number
+      targetHeight?: number
+      targetWidth?: number
+    } | null => {
+      //@ts-expect-error FIXME JS-ville
+      let imageSrc = props[srcType] as string
+      let fitSizes: Partial<{
+        width: number
+        height: number
+      }> = {}
+
+      //@ts-expect-error FIXME JS-ville
+      const thumbnailImage = props[`${srcType}Thumbnail`] as string
+      if (isImageLoaded(imageSrc)) {
+        // Use full-size image if available
+
+        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height)
+      } else if (isImageLoaded(thumbnailImage)) {
+        // Fall back to using thumbnail if the image has not been loaded
+        imageSrc = thumbnailImage
+        fitSizes = getFitSizes(imageCache.current[imageSrc].width, imageCache.current[imageSrc].height, true)
+      } else {
+        return null
+      }
+
+      return {
+        src: imageSrc,
+        height: imageCache.current[imageSrc].height,
+        width: imageCache.current[imageSrc].width,
+        targetHeight: fitSizes.height,
+        targetWidth: fitSizes.width
+      }
+    },
+    [getFitSizes, props]
+  )
+
+  const getMaxOffsets = useCallback(
+    (newZoomLevel = zoomLevel) => {
+      const currentImageInfo = getBestImageForType('mainSrc')
+      if (currentImageInfo === null) {
+        return { maxX: 0, minX: 0, maxY: 0, minY: 0 }
+      }
+
+      const boxSize = getLightboxRect()
+      const zoomMultiplier = getZoomMultiplier(newZoomLevel)
+
+      let maxX = 0
+      if (zoomMultiplier * currentImageInfo.width - boxSize.width < 0) {
+        // if there is still blank space in the X dimension, don't limit except to the opposite edge
+        maxX = (boxSize.width - zoomMultiplier * currentImageInfo.width) / 2
+      } else {
+        maxX = (zoomMultiplier * currentImageInfo.width - boxSize.width) / 2
+      }
+
+      let maxY = 0
+      if (zoomMultiplier * currentImageInfo.height - boxSize.height < 0) {
+        // if there is still blank space in the Y dimension, don't limit except to the opposite edge
+        maxY = (boxSize.height - zoomMultiplier * currentImageInfo.height) / 2
+      } else {
+        maxY = (zoomMultiplier * currentImageInfo.height - boxSize.height) / 2
+      }
+
+      return {
+        maxX,
+        maxY,
+        minX: -1 * maxX,
+        minY: -1 * maxY
+      }
+    },
+    [getBestImageForType, getLightboxRect, getZoomMultiplier, zoomLevel]
+  )
 
   const requestMove = (
     direction: 'prev' | 'next',
@@ -1124,6 +1157,27 @@ export const useLightbox = (props: OwnProps) => {
   ) => {
     requestMove('prev', event)
   }
+
+  useEffect(() => {
+    if (!props.animationDisabled) {
+      // Make opening animation play
+      setIsClosing(false)
+    }
+    windowContext.current = getHighestSafeWindowContext()
+
+    // TODO: Add listeners
+    listeners.current = {
+      resize: handleWindowResize,
+      mouseup: handleMouseUp,
+      touchend: handleTouchEnd,
+      touchcancel: handleTouchEnd,
+      pointerdown: handlePointerEvent,
+      pointermove: handlePointerEvent,
+      pointerup: handlePointerEvent,
+      pointercancel: handlePointerEvent
+    }
+    loadAllImages()
+  }, [props.animationDisabled, loadAllImages, handleWindowResize, handleMouseUp, handleTouchEnd, handlePointerEvent])
 
   return {
     zoomLevel,

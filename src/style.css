@@ -47,6 +47,7 @@
   max-width: none;
   -ms-content-zooming: none;
   -ms-user-select: none;
+  user-select: none;
   -ms-touch-select: none;
   touch-action: none;
 }
