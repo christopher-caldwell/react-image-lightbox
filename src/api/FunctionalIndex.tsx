@@ -13,15 +13,16 @@ import {
   NavButton,
   Caption
 } from '../components'
-import { translate } from '../util'
+import { mergePropsWithDefault, translate } from '../util'
 
 export const Lightbox: FC<OwnProps> = props => {
+  const mergedProps = mergePropsWithDefault(props)
   const {
     animationDisabled,
     animationDuration,
     clickOutsideToClose,
     discourageDownloads,
-    enableZoom = true,
+    enableZoom,
     imageTitle,
     nextSrc,
     prevSrc,
@@ -30,9 +31,8 @@ export const Lightbox: FC<OwnProps> = props => {
     onAfterOpen,
     imageCrossOrigin,
     reactModalProps,
-    loader,
-    isOpen
-  } = props
+    loader
+  } = mergedProps
   const {
     zoomLevel,
     offsetX,
@@ -64,7 +64,7 @@ export const Lightbox: FC<OwnProps> = props => {
     caption,
     requestMovePrev,
     requestMoveNext
-  } = useLightbox(props)
+  } = useLightbox(mergedProps)
 
   const boxSize = getLightboxRect()
   let transitionStyle = {}

@@ -1,6 +1,6 @@
 import { createRef, useState, useRef, useEffect, useCallback } from 'react'
 import Modal, { Props as ModalProps } from 'react-modal'
-import { getWindowWidth, getWindowHeight } from '../util'
+import { getWindowWidth, getWindowHeight, getHighestSafeWindowContext } from '../util'
 
 import {
   ACTION_MOVE,
@@ -115,6 +115,8 @@ export const useLightbox = (props: OwnProps) => {
   // Used for debouncing window resize event
   const resizeTimeout = useRef<NodeJS.Timeout | null>(null)
 
+  const listeners = useRef<any>([])
+
   // Used to determine when actions are triggered by the scroll wheel
   const wheelActionTimeout = useRef<NodeJS.Timeout | null>(null)
   const resetScrollTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -145,6 +147,8 @@ export const useLightbox = (props: OwnProps) => {
   const didUnmount = useRef<boolean>(false)
 
   const prevProps = useRef<OwnProps>(props)
+
+  const windowContext = useRef<Window>()
 
   /**  Load image from src and call callback with image width and height on load */
   const loadImage = useCallback(
@@ -266,6 +270,29 @@ export const useLightbox = (props: OwnProps) => {
     }
     prevProps.current = props
   }, [props, loadAllImages])
+
+  useEffect(() => {
+    if (!props.animationDisabled) {
+      // Make opening animation play
+      setIsClosing(false)
+    }
+    windowContext.current = getHighestSafeWindowContext()
+
+    // TODO: Add listeners
+
+    loadAllImages()
+  }, [props.animationDisabled, loadAllImages])
+
+  // useEffect(() => {
+  //   const listenersCurrent = listeners.current
+  //   return () => {
+  //     didUnmount.current = true
+  //     Object.keys(listenersCurrent).forEach(type => {
+  //       windowContext.current?.removeEventListener(type, listenersCurrent[type])
+  //     })
+  //     timeouts.current.forEach(tid => clearTimeout(tid))
+  //   }
+  // })
 
   const _setTimeout = (func: () => void, time?: number) => {
     const id = setTimeout(() => {
@@ -1168,7 +1195,7 @@ export type OwnProps = {
   reactModalStyle?: Modal.Styles
   imagePadding?: number
   wrapperClassName?: string
-  toolbarButtons?: React.ReactNode[]
+  toolbarButtons?: React.ReactNode[] | null
   clickOutsideToClose?: boolean
   enableZoom?: boolean
   reactModalProps?: {}

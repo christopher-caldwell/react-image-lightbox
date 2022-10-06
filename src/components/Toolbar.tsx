@@ -65,9 +65,9 @@ export const Toolbar: FC<ToolbarProps> = ({
 }
 
 export interface ToolbarProps {
-  toolbarButtons?: ReactNode[]
+  toolbarButtons?: ReactNode[] | null
   imageTitle?: string
-  enableZoom: boolean
+  enableZoom?: boolean
   closeLabel?: string
   isAnimating: () => boolean
   requestClose: ModalProps['onRequestClose']

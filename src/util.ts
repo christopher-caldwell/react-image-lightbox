@@ -1,3 +1,5 @@
+import { OwnProps } from './api/useLightbox'
+
 /**
  * Placeholder for future translate functionality
  */
@@ -51,4 +53,44 @@ export function getHighestSafeWindowContext(self = global.window.self): Window {
   // If a different origin, we consider the current level
   // as the top reachable one
   return self
+}
+
+const defaultProps: Partial<OwnProps> = {
+  imageTitle: null,
+  imageCaption: null,
+  toolbarButtons: null,
+  reactModalProps: {},
+  animationDisabled: false,
+  animationDuration: 300,
+  animationOnKeyInput: false,
+  clickOutsideToClose: true,
+  closeLabel: 'Close lightbox',
+  discourageDownloads: false,
+  enableZoom: true,
+  imagePadding: 10,
+  keyRepeatKeyupBonus: 40,
+  keyRepeatLimit: 180,
+  nextLabel: 'Next image',
+  onAfterOpen: () => {},
+  onImageLoadError: () => {},
+  onImageLoad: () => {},
+  onMoveNextRequest: () => {},
+  onMovePrevRequest: () => {},
+  prevLabel: 'Previous image',
+  reactModalStyle: {},
+  wrapperClassName: '',
+  zoomInLabel: 'Zoom in',
+  zoomOutLabel: 'Zoom out',
+  imageLoadErrorMessage: 'This image failed to load',
+  loader: undefined
+}
+
+export const mergePropsWithDefault = (props: OwnProps): OwnProps => {
+  const mutableProps: Record<string, unknown> = { ...props }
+  Object.entries(defaultProps).forEach(([key, prop]) => {
+    if (!mutableProps[key as keyof OwnProps]) {
+      mutableProps[key as keyof OwnProps] = prop
+    }
+  })
+  return mutableProps as OwnProps
 }
