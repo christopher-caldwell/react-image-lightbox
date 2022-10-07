@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.2](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.1...v0.1.2) (2022-10-07)
+
+
+### Features
+
+* Adding getter ([#6](https://github.com/christopher-caldwell/react-image-lightbox/issues/6)) ([9f5fe6d](https://github.com/christopher-caldwell/react-image-lightbox/commit/9f5fe6d496ab2fdb9032383acbc2b4ca2e120229))
+
 ### [0.1.1](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.0...v0.1.1) (2022-10-07)
 
 
