@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.2...v0.1.3) (2022-10-07)
+
+
+### Features
+
+* Allowing setActiveIndex to exported for direct setting ([e40fe7d](https://github.com/christopher-caldwell/react-image-lightbox/commit/e40fe7d13a78254825754d909d8be1c0c39ca969))
+
 ### [0.1.2](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.1...v0.1.2) (2022-10-07)
 
 
