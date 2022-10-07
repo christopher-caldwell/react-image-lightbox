@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.0...v0.1.1) (2022-10-07)
+
+
+### Bug Fixes
+
+* Adding contributors ([799a0d3](https://github.com/christopher-caldwell/react-image-lightbox/commit/799a0d3f5770b29a979287bbac43769419e42801))
+* Adding shields ([09ef247](https://github.com/christopher-caldwell/react-image-lightbox/commit/09ef247e4a811fe7846fc709fbbb4d8d16a712f5))
+* Removing unused files ([a581ffa](https://github.com/christopher-caldwell/react-image-lightbox/commit/a581ffaae01d86160f8b08166c17b9bf5691846f))
+
 ## 0.1.0 (2022-10-06)
 
 
