@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
-export const useControlHelper = <TImage>(images: TImage[]) => {
-  const [activeIndex, setActiveIndex] = useState<number>(0)
+export const useControlHelper = <TImage>(images: TImage[], getStartingIndex: number | (() => number) = 0) => {
+  const startIndex = typeof getStartingIndex === 'number' ? getStartingIndex : getStartingIndex()
+  const [activeIndex, setActiveIndex] = useState<number>(startIndex)
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
   const movePrev = () => {
