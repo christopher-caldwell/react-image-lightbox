@@ -12,8 +12,14 @@ import { Layout } from './components'
 const images = [image1, image2, image3, image4]
 
 export const App: FC = () => {
-  const { activeIndex, isOpen, toggleOpen, moveNext, movePrev, nextImage, prevImage, mainImage } =
-    useControlHelper(images)
+  /** Optional helper provided to handle common usage of next and prev. You can, of course, use your own state.
+   * @source https://github.com/christopher-caldwell/react-image-lightbox/blob/5-allow-usecontrolhelper-to-start-on-a-specific-image/src/api/useControlHelper.ts
+   */
+  const { activeIndex, isOpen, toggleOpen, moveNext, movePrev, nextImage, prevImage, mainImage } = useControlHelper(
+    images,
+    // Optional getter to start on a specific index
+    () => 1
+  )
   return (
     <>
       <Layout>
