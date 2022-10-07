@@ -255,6 +255,7 @@ export const Lightbox: FC<OwnProps> = props => {
         ) : null}
 
         <Toolbar
+          imageTitle={imageTitle}
           zoomInButton={zoomInBtn}
           zoomLevel={zoomLevel}
           zoomInLabel={props.zoomInLabel}

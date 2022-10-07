@@ -64,7 +64,7 @@ export const Toolbar: FC<ToolbarProps> = ({
 
 export interface ToolbarProps {
   toolbarButtons?: ReactNode[] | null
-  imageTitle?: string
+  imageTitle?: ReactNode | null
   enableZoom?: boolean
   closeLabel?: string
   isAnimating: () => boolean
