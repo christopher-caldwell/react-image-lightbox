@@ -23,6 +23,7 @@ export const useControlHelper = <TImage>(images: TImage[], getStartingIndex: num
 
   return {
     activeIndex,
+    setActiveIndex,
     moveNext,
     movePrev,
     isOpen,

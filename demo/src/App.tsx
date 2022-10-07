@@ -15,15 +15,21 @@ export const App: FC = () => {
   /** Optional helper provided to handle common usage of next and prev. You can, of course, use your own state.
    * @source https://github.com/christopher-caldwell/react-image-lightbox/blob/5-allow-usecontrolhelper-to-start-on-a-specific-image/src/api/useControlHelper.ts
    */
-  const { activeIndex, isOpen, toggleOpen, moveNext, movePrev, nextImage, prevImage, mainImage } = useControlHelper(
-    images,
-    // Optional getter to start on a specific index
-    () => 1
-  )
+  const { activeIndex, setActiveIndex, isOpen, toggleOpen, moveNext, movePrev, nextImage, prevImage, mainImage } =
+    useControlHelper(
+      images,
+      // Optional getter to start on a specific index
+      () => 1
+    )
+
+  const onOpen = () => {
+    setActiveIndex(Math.round(Math.random() * 3))
+    toggleOpen()
+  }
   return (
     <>
       <Layout>
-        <Button onClick={toggleOpen}>Open</Button>
+        <Button onClick={onOpen}>Open</Button>
       </Layout>
       <Lightbox
         isOpen={isOpen}
