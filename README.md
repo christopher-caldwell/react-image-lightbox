@@ -1,7 +1,7 @@
 # React Image Lightbox
 
 <p align="center">
-  <h6/>
+  <div />
   <img src="https://img.shields.io/npm/v/@caldwell619/react-image-lightbox">
   <img src="https://img.shields.io/bundlephobia/min/@caldwell619/react-image-lightbox">
   <img src="https://img.shields.io/github/last-commit/christopher-caldwell/react-image-lightbox">
@@ -90,6 +90,8 @@ Full, yet **WIP** [list of props](./docs/props.md)
 ## Contributing
 
 WIP guide [here](./docs/CONTRIBUTING.md)
+
+[Contributor List](https://github.com/christopher-caldwell/react-image-lightbox/graphs/contributors)
 
 ## License
 
