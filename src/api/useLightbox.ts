@@ -1,7 +1,7 @@
 import { createRef, useState, useRef, useEffect, useCallback } from 'react'
 import Modal, { Props as ModalProps } from 'react-modal'
-import { getWindowWidth, getWindowHeight, getHighestSafeWindowContext } from '../util'
 
+import { getWindowWidth, getWindowHeight, getHighestSafeWindowContext } from '@/util'
 import {
   ACTION_MOVE,
   ACTION_NONE,
@@ -19,7 +19,7 @@ import {
   WHEEL_MOVE_Y_THRESHOLD,
   ZOOM_BUTTON_INCREMENT_SIZE,
   ZOOM_RATIO
-} from '../constant'
+} from '@/constant'
 
 const isTargetMatchImage = (target: React.TouchEvent<HTMLDivElement>['target']) => {
   //@ts-expect-error FIXME

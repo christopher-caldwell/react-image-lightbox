@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL } from '../constant'
+import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL } from '@/constant'
 import { ToolbarProps } from './Toolbar'
 
 export const ZoomControl: FC<Props> = ({

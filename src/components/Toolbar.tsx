@@ -20,9 +20,7 @@ export const Toolbar: FC<ToolbarProps> = ({
   requestClose
 }) => {
   return (
-    <div // Lightbox toolbar
-      className='ril-toolbar ril__toolbar'
-    >
+    <div className='ril-toolbar ril__toolbar'>
       <ul className='ril-toolbar-left ril__toolbarSide ril__toolbarLeftSide'>
         <li className='ril-toolbar__item ril__toolbarItem'>
           <span className='ril-toolbar__item__child ril__toolbarItemChild'>{imageTitle}</span>
