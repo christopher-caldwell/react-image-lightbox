@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.4](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.3...v0.1.4) (2022-10-07)
+
+
+### Bug Fixes
+
+* Providing the image title ([12bcf16](https://github.com/christopher-caldwell/react-image-lightbox/commit/12bcf16b572b22b4a6bc54a4ea7d11892a65e180))
+
 ### [0.1.3](https://github.com/christopher-caldwell/react-image-lightbox/compare/v0.1.2...v0.1.3) (2022-10-07)
 
 
